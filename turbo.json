@@ -51,7 +51,13 @@
     "AUTH_GOOGLE_SECRET",
     "AUTH_REDIRECT_PROXY_URL",
     "AUTH_SECRET",
-    "PORT"
+    "PORT",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_ENDPOINT_URL_S3",
+    "AWS_ENDPOINT_URL_IAM",
+    "AWS_REGION",
+    "S3_BUCKET_NAME"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
