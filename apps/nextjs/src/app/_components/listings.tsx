@@ -7,6 +7,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Button } from "@acme/ui/button";
 // import { Badge } from "@acme/ui/badge";
 import { Card, CardContent } from "@acme/ui/card";
+import { Skeleton } from "@acme/ui/skeleton";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -144,7 +145,7 @@ export function ListingGridSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <Card key={i} className="h-64 animate-pulse bg-gray-200" />
+        <Skeleton key={i} className="h-64 animate-pulse" />
       ))}
     </div>
   );
@@ -152,7 +153,7 @@ export function ListingGridSkeleton() {
 
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center bg-gray-100 p-16 text-gray-500">
+    <div className="flex flex-col items-center justify-center p-16 text-gray-500">
       <p className="text-2xl font-bold">No listings found.</p>
     </div>
   );
