@@ -13,6 +13,7 @@ export const addListingSchema = z.object({
   cityId: z.number().int("Invalid city").positive("Invalid city"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  partNumber: z.string().optional(),
   imageUrls: z
     .array(
       z.url("Invalid image URL").refine(

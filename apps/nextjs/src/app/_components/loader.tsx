@@ -1,9 +1,16 @@
+import { cn } from "@acme/ui";
+
 interface SimpleLoaderProps {
   size?: "sm" | "md" | "lg";
   message?: string;
+  className?: string;
 }
 
-const Loader: React.FC<SimpleLoaderProps> = ({ size = "md", message }) => {
+const Loader: React.FC<SimpleLoaderProps> = ({
+  size = "md",
+  message,
+  className,
+}) => {
   const sizeClasses = {
     sm: "w-6 h-6",
     md: "w-8 h-8",
@@ -14,7 +21,10 @@ const Loader: React.FC<SimpleLoaderProps> = ({ size = "md", message }) => {
     <div className="flex h-screen flex-col items-center justify-center space-y-4">
       {/* Spinning Icon */}
       <div
-        className={`${sizeClasses[size]} flex animate-spin items-center justify-center rounded-full border-2 border-b-0 border-t-0 border-primary`}
+        className={cn(
+          `${sizeClasses[size]} flex animate-spin items-center justify-center rounded-full border-2 border-b-0 border-t-0 border-primary`,
+          className,
+        )}
       ></div>
 
       {/* Optional Message */}

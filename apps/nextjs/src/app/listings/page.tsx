@@ -4,8 +4,29 @@ import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { ListingGrid, ListingGridSkeleton } from "../_components/listings";
 import SearchListings from "../_components/listings/search-listings";
 
-export default function ListingsPage() {
-  prefetch(trpc.listing.list.queryOptions({ limit: 20, offset: 0 }));
+export default async function ListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    category?: string;
+    make?: string;
+    query?: string;
+  }>;
+}) {
+  const { category, make, query } = await searchParams;
+  const categoryId =
+    category && !isNaN(Number(category)) ? Number(category) : undefined;
+  const makeId = make && !isNaN(Number(make)) ? Number(make) : undefined;
+
+  prefetch(
+    trpc.listing.list.queryOptions({
+      limit: 20,
+      offset: 0,
+      categoryId,
+      makeId,
+      keyword: query,
+    }),
+  );
 
   return (
     <HydrateClient>

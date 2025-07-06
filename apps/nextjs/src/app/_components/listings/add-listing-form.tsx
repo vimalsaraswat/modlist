@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
-  Camera,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import {
   Car,
   DollarSign,
   ImageIcon,
@@ -31,9 +36,12 @@ import { toast } from "@acme/ui/toast";
 import { addListingSchema } from "@acme/validators";
 
 import { useTRPC } from "~/trpc/react";
+import Loader from "../loader";
 
 export default function AddListingForm() {
   const trpc = useTRPC();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form Setup
   const form = useForm({
@@ -50,13 +58,14 @@ export default function AddListingForm() {
       longitude: undefined,
     },
   });
-
+  const queryClient = useQueryClient();
   // Mutations
   const createListing = useMutation(
     trpc.listing.create.mutationOptions({
-      onSuccess: () => {
+      onSuccess: async () => {
         form.reset();
-        // await queryClient.invalidateQueries(trpc.post.pathFilter());
+        await queryClient.invalidateQueries(trpc.listing.list.pathFilter());
+        router.push("/listings");
       },
       onError: (err) => {
         toast.error(
@@ -147,6 +156,7 @@ export default function AddListingForm() {
         return;
       }
 
+      setIsLoading(true);
       const imageUrls = await handleUploadImages();
       await createListing.mutateAsync({
         ...data,
@@ -154,7 +164,9 @@ export default function AddListingForm() {
       });
     } catch (err) {
       toast.error("Something went wrong, please try again!");
-      console.log("Errrrrrrrrrrrrrr", err);
+      console.log("Error creating listing: ", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -478,9 +490,14 @@ export default function AddListingForm() {
           </Button> */}
           <Button
             type="submit"
-            className="bg-orange-500 px-12 text-white hover:bg-orange-600"
+            disabled={isLoading}
+            className="flex items-center gap-2 bg-orange-500 px-12 text-white hover:bg-orange-600"
           >
-            <Camera className="mr-2" size={16} />
+            {isLoading ? (
+              <Loader size="sm" className="border-secondary" />
+            ) : (
+              <Upload size={16} />
+            )}
             Publish Listing
           </Button>
         </div>

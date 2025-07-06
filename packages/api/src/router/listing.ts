@@ -68,7 +68,11 @@ export const listingRouter = {
       if (keyword) {
         const kw = `%${keyword.toLowerCase()}%`;
         filters.push(
-          or(ilike(listing.title, kw), ilike(listing.description, kw)),
+          or(
+            ilike(listing.title, kw),
+            ilike(listing.description, kw),
+            ilike(listing.partNumber, kw),
+          ),
         );
       }
       if (categoryId) filters.push(eq(listing.categoryId, categoryId));
@@ -143,6 +147,10 @@ export const listingRouter = {
         latitude: input.latitude ? String(input.latitude) : undefined,
         longitude: input.longitude ? String(input.longitude) : undefined,
       };
+
+      if (input.partNumber && input.partNumber !== "") {
+        data.partNumber = input.partNumber as string;
+      }
 
       const inserted = await ctx.db.insert(listing).values(data).returning();
       const id = inserted[0]?.id;

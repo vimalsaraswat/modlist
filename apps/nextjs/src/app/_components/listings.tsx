@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 // import { Badge } from "@acme/ui/badge";
@@ -13,8 +14,31 @@ import { useTRPC } from "~/trpc/react";
 
 export function ListingGrid() {
   const trpc = useTRPC();
+  const searchParams = useSearchParams();
+
+  const searchQuery = searchParams.get("query");
+  const category = searchParams.get("category");
+  const make = searchParams.get("make");
+  const categoryId =
+    category && !isNaN(Number(category)) && Number(category) >= 0
+      ? Number(category)
+      : undefined;
+  const makeId =
+    make && !isNaN(Number(make)) && Number(make) >= 0
+      ? Number(make)
+      : undefined;
+
   const { data: listings = [] } = useSuspenseQuery(
-    trpc.listing.list.queryOptions({ limit: 20, offset: 0 }),
+    trpc.listing.list.queryOptions({
+      limit: 20,
+      offset: 0,
+      categoryId,
+      makeId,
+      keyword:
+        typeof searchQuery === "string" && searchQuery !== ""
+          ? searchQuery
+          : undefined,
+    }),
   );
 
   if (listings.length === 0) {
