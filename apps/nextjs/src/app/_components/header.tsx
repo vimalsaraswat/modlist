@@ -1,9 +1,9 @@
 import React from "react";
 import Link from "next/link";
-import { Plus, Search, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 
-import { Button } from "@acme/ui/button";
-import { Input } from "@acme/ui/input";
+// import { Button } from "@acme/ui/button";
+// import { Input } from "@acme/ui/input";
 
 import Navbar from "./navbar";
 import { UserAccountNav } from "./user-account-nav";

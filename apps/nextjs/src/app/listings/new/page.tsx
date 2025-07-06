@@ -1,505 +1,220 @@
-"use client";
+import { Suspense } from "react";
 
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Badge } from "@acme/ui/badge";
 import {
-  Camera,
-  Car,
-  DollarSign,
-  ImageIcon,
-  MapPin,
-  Tag,
-  Upload,
-  X,
-} from "lucide-react";
-import { z } from "zod/v4";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@acme/ui/card";
+import { Separator } from "@acme/ui/separator";
 
-import { Button } from "@acme/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
-import { Form, FormField, FormMessage, useForm } from "@acme/ui/form";
-import { Input } from "@acme/ui/input";
-import { Label } from "@acme/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@acme/ui/select";
-import { Textarea } from "@acme/ui/textarea";
-import { toast } from "@acme/ui/toast";
-import { addListingSchema } from "@acme/validators";
+import AddListingForm from "~/app/_components/listings/add-listing-form";
+import Loader from "~/app/_components/loader";
+import { getSession } from "~/auth/server";
+import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 
-import { useTRPC } from "~/trpc/react";
+export default async function ListingsPage() {
+  const session = await getSession();
 
-export default function NewListingPage() {
-  const trpc = useTRPC();
-
-  // Form Setup
-  const form = useForm({
-    schema: addListingSchema,
-    defaultValues: {
-      title: "",
-      description: "",
-      price: 0,
-      makeId: undefined,
-      modelId: undefined,
-      categoryId: undefined,
-      cityId: undefined,
-      latitude: undefined,
-      longitude: undefined,
-    },
-  });
-
-  // Mutations
-  const createListing = useMutation(
-    trpc.listing.create.mutationOptions({
-      onSuccess: () => {
-        form.reset();
-        // await queryClient.invalidateQueries(trpc.post.pathFilter());
-      },
-      onError: (err) => {
-        toast.error(
-          err.data?.code === "UNAUTHORIZED"
-            ? "You must be logged in to post"
-            : "Failed to create post",
-        );
-      },
-    }),
-  );
-
-  const getPresignedUrl = useMutation(
-    trpc.uploader.getPreSignedUrl.mutationOptions({
-      onError: (err) => {
-        toast.error(
-          err.data?.code === "UNAUTHORIZED"
-            ? "You must be logged in to post"
-            : "Failed to upload images",
-        );
-      },
-    }),
-  );
-
-  // Queries
-  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery(
-    trpc.listing.categoryList.queryOptions(),
-  );
-
-  const { data: makes = [], isLoading: isMakesLoading } = useQuery(
-    trpc.listing.makeList.queryOptions(),
-  );
-
-  const { data: cities = [], isLoading: isCitiesLoading } = useQuery(
-    trpc.listing.cityList.queryOptions(),
-  );
-
-  const makeId = form.watch("makeId");
-  const { data: models = [], isLoading: isModelsLoading } = useQuery(
-    trpc.listing.modelListByMake.queryOptions(
-      { makeId },
-      { enabled: !!makeId },
-    ),
-  );
-
-  const [images, setImages] = useState<string[]>([]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-
-  // Handlers
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    const newUrls = Array.from(files)
-      .slice(0, 5)
-      .map((file) => URL.createObjectURL(file));
-
-    setImages((prev) => [...prev, ...newUrls].slice(0, 5));
-    setImageFiles((prev) => [...prev, ...Array.from(files)].slice(0, 5));
-  };
-
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleUploadImages = () => {
-    return Promise.all(
-      imageFiles.map(async (file) => {
-        const res = await getPresignedUrl.mutateAsync({
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-        });
-        await fetch(res.presignedUrl, {
-          method: "PUT",
-          body: file,
-          headers: {
-            "Content-Type": file.type,
-          },
-        });
-        return res.presignedUrl.split("?")[0];
-      }),
-    );
-  };
-
-  const onSubmit = async (data: z.infer<typeof addListingSchema>) => {
-    try {
-      const imageUrls = await handleUploadImages();
-      await createListing.mutateAsync({
-        ...data,
-        imageUrls: imageUrls.filter((url): url is string => !!url),
-      });
-    } catch (err) {
-      console.log("Errrrrrrrrrrrrrr", err);
-    }
-  };
+  if (session) {
+    prefetch(trpc.listing.categoryList.queryOptions());
+    prefetch(trpc.listing.makeList.queryOptions());
+    prefetch(trpc.listing.cityList.queryOptions());
+  }
 
   return (
-    <div className="min-h-screen bg-zinc-900 pt-20">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-zinc-900 via-zinc-800 to-orange-900/30 py-16">
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-orange-500/10 to-red-500/10"></div>
-        <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
-          <h1 className="neon-text mb-4 text-5xl font-bold text-white md:text-6xl">
-            List Your <span className="text-orange-400">Parts</span>
-          </h1>
-          <p className="mx-auto max-w-2xl text-xl text-zinc-300">
-            Turn your spare parts into cash. Reach thousands of enthusiasts
-            looking for exactly what you're selling.
-          </p>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-4xl space-y-8 px-6 py-12">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Images Section */}
-            <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <ImageIcon size={24} className="text-orange-400" />
-                  Photos (Up to 5)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-5">
-                  {images.map((src, idx) => (
-                    <div key={idx} className="group relative">
-                      <img
-                        src={src}
-                        alt={`Preview ${idx + 1}`}
-                        className="h-32 w-full rounded-lg border-2 border-zinc-600 object-cover"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => removeImage(idx)}
-                        className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                      >
-                        <X size={12} />
-                      </Button>
-                    </div>
-                  ))}
-                  {images.length < 5 && (
-                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-zinc-600 transition-colors hover:border-orange-400">
-                      <Upload
-                        className="mb-2 text-zinc-400 hover:text-orange-400"
-                        size={24}
-                      />
-                      <span className="text-sm text-zinc-400">Add Photo</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-                <p className="text-sm text-zinc-400">
-                  Add clear photos from multiple angles. First photo will be the
-                  main image.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Basic Info */}
-            <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Tag size={24} className="text-orange-400" />
-                  Basic Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <FormField
-                  name="title"
-                  render={({ field }) => (
-                    <div>
-                      <Label htmlFor="title" className="text-white">
-                        Title *
-                      </Label>
-                      <Input
-                        {...field}
-                        id="title"
-                        placeholder="e.g., Garrett GT2860RS Turbo Kit"
-                        className="border-zinc-600 bg-zinc-700/50 text-white"
-                      />
-                      <FormMessage />
-                    </div>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormField
-                    name="categoryId"
-                    render={({ field }) => (
-                      <div>
-                        <Label className="text-white">Category *</Label>
-                        <Select
-                          onValueChange={(v) => field.onChange(Number(v))}
-                          value={String(field.value ?? "")}
-                        >
-                          <SelectTrigger className="border-zinc-600 bg-zinc-700/50 text-white">
-                            <SelectValue
-                              placeholder={
-                                isCategoriesLoading
-                                  ? "Loading..."
-                                  : "Select category"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent className="border-zinc-700 bg-zinc-800">
-                            {categories.map((cat) => (
-                              <SelectItem key={cat.id} value={String(cat.id)}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </div>
-                    )}
-                  />
-
-                  <FormField
-                    name="brand"
-                    render={({ field }) => (
-                      <div>
-                        <Label className="text-white">Brand</Label>
-                        <Input
-                          {...field}
-                          placeholder="e.g., Garrett"
-                          className="border-zinc-600 bg-zinc-700/50 text-white"
-                        />
-                        <FormMessage />
-                      </div>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  name="description"
-                  render={({ field }) => (
-                    <div>
-                      <Label className="text-white">Description *</Label>
-                      <Textarea
-                        {...field}
-                        placeholder="Describe the part..."
-                        className="min-h-32 border-zinc-600 bg-zinc-700/50 text-white"
-                      />
-                      <FormMessage />
-                    </div>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Car Compatibility */}
-            <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Car size={24} className="text-orange-400" />
-                  Car Compatibility
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  <FormField
-                    name="makeId"
-                    render={({ field }) => (
-                      <div>
-                        <Label className="text-white">Make *</Label>
-                        <Select
-                          onValueChange={(v) => field.onChange(Number(v))}
-                          value={String(field.value ?? "")}
-                        >
-                          <SelectTrigger className="border-zinc-600 bg-zinc-700/50 text-white">
-                            <SelectValue
-                              placeholder={
-                                isMakesLoading ? "Loading..." : "Select make"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent className="border-zinc-700 bg-zinc-800">
-                            <SelectItem value="0">Universal Fitment</SelectItem>
-                            {makes.map((m) => (
-                              <SelectItem key={m.id} value={String(m.id)}>
-                                {m.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </div>
-                    )}
-                  />
-
-                  <FormField
-                    name="modelId"
-                    render={({ field }) => (
-                      <div>
-                        <Label className="text-white">Model</Label>
-                        <Select
-                          onValueChange={(v) => field.onChange(Number(v))}
-                          value={String(field.value ?? "")}
-                          disabled={!makeId || isModelsLoading}
-                        >
-                          <SelectTrigger className="border-zinc-600 bg-zinc-700/50 text-white">
-                            <SelectValue
-                              placeholder={
-                                makeId
-                                  ? isModelsLoading
-                                    ? "Loading..."
-                                    : "Select model"
-                                  : "Select make first"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent className="border-zinc-700 bg-zinc-800">
-                            {models.map((m) => (
-                              <SelectItem key={m.id} value={String(m.id)}>
-                                {m.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </div>
-                    )}
-                  />
-
-                  <FormField
-                    name="partNumber"
-                    render={({ field }) => (
-                      <div>
-                        <Label className="text-white">Part Number</Label>
-                        <Input
-                          {...field}
-                          placeholder="e.g., GT2860RS-KIT"
-                          className="border-zinc-600 bg-zinc-700/50 text-white"
-                        />
-                        <FormMessage />
-                      </div>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Price & Location */}
-            <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <DollarSign size={24} className="text-orange-400" />
-                  Price & Location
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormField
-                    name="price"
-                    render={({ field }) => (
-                      <div>
-                        <Label className="text-white">Price (CAD) *</Label>
-                        <div className="relative">
-                          <DollarSign
-                            className="absolute left-3 top-1/2 -translate-y-1/2 transform text-zinc-400"
-                            size={16}
-                          />
-                          <Input
-                            {...field}
-                            type="number"
-                            placeholder="0"
-                            className="border-zinc-600 bg-zinc-700/50 pl-10 text-white"
-                          />
-                        </div>
-                        <FormMessage />
-                      </div>
-                    )}
-                  />
-
-                  <FormField
-                    name="cityId"
-                    render={({ field }) => (
-                      <div>
-                        <Label className="text-white">Location *</Label>
-                        <div className="relative">
-                          <MapPin
-                            className="absolute left-3 top-1/2 -translate-y-1/2 transform text-zinc-400"
-                            size={16}
-                          />
-                          <Select
-                            onValueChange={(v) => field.onChange(Number(v))}
-                            value={String(field.value ?? "")}
-                          >
-                            <SelectTrigger className="border-zinc-600 bg-zinc-700/50 pl-10 text-white">
-                              <SelectValue
-                                placeholder={
-                                  isCitiesLoading
-                                    ? "Loading..."
-                                    : "Select location"
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectContent className="border-zinc-700 bg-zinc-800">
-                              {cities.map((c) => (
-                                <SelectItem key={c.id} value={String(c.id)}>
-                                  {c.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <FormMessage />
-                      </div>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Submit Buttons */}
-            <div className="flex flex-col justify-end gap-4 sm:flex-row">
-              <Button
-                variant="outline"
-                type="button"
-                className="border-zinc-600 text-white hover:bg-zinc-800"
+    <HydrateClient>
+      <main className="min-h-screen bg-zinc-900 pt-20">
+        {/* Hero Section */}
+        <div className="relative bg-gradient-to-br from-zinc-900 via-zinc-800 to-orange-900/30 py-16">
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-orange-500/10 to-red-500/10"></div>
+          <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
+            <div className="mb-6 flex justify-center">
+              <Badge
+                variant="secondary"
+                className="border-orange-500/30 bg-orange-500/20 text-orange-400"
               >
-                Save as Draft
-              </Button>
-              <Button
-                type="submit"
-                className="bg-orange-500 px-12 text-white hover:bg-orange-600"
-              >
-                <Camera className="mr-2" size={16} />
-                Publish Listing
-              </Button>
+                🚗 Auto Parts Marketplace
+              </Badge>
             </div>
-          </form>
-        </Form>
-      </div>
-    </div>
+            <h1 className="neon-text mb-4 text-5xl font-bold text-white md:text-6xl">
+              List Your <span className="text-orange-400">Parts</span>
+            </h1>
+            <p className="mx-auto mb-8 max-w-2xl text-xl text-zinc-300">
+              Turn your spare parts into cash. Reach thousands of enthusiasts
+              looking for exactly what you're selling.
+            </p>
+
+            {/* Feature highlights */}
+            <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Card className="border-zinc-700 bg-zinc-800/50 backdrop-blur-sm">
+                <CardContent className="p-4 text-center">
+                  <div className="mb-2 text-2xl">⚡</div>
+                  <h3 className="font-semibold text-white">Quick Listing</h3>
+                  <p className="text-sm text-zinc-400">
+                    Get your parts online in minutes
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-zinc-700 bg-zinc-800/50 backdrop-blur-sm">
+                <CardContent className="p-4 text-center">
+                  <div className="mb-2 text-2xl">🎯</div>
+                  <h3 className="font-semibold text-white">Targeted Reach</h3>
+                  <p className="text-sm text-zinc-400">
+                    Connect with genuine buyers
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-zinc-700 bg-zinc-800/50 backdrop-blur-sm">
+                <CardContent className="p-4 text-center">
+                  <div className="mb-2 text-2xl">💰</div>
+                  <h3 className="font-semibold text-white">Best Prices</h3>
+                  <p className="text-sm text-zinc-400">
+                    Maximize your part's value
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-4xl space-y-8 px-6 py-12">
+          {session ? (
+            <div className="space-y-6">
+              {/* Instructions Card */}
+              <Card className="border-zinc-700 bg-zinc-800/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    📋 How to List Your Parts
+                  </CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    Follow these simple steps to create an effective listing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Badge
+                          variant="outline"
+                          className="border-orange-500/30 bg-orange-500/20 text-orange-400"
+                        >
+                          1
+                        </Badge>
+                        <div>
+                          <h4 className="font-medium text-white">
+                            Add Details
+                          </h4>
+                          <p className="text-sm text-zinc-400">
+                            Provide part name, condition, and specifications
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Badge
+                          variant="outline"
+                          className="border-orange-500/30 bg-orange-500/20 text-orange-400"
+                        >
+                          2
+                        </Badge>
+                        <div>
+                          <h4 className="font-medium text-white">
+                            Upload Photos
+                          </h4>
+                          <p className="text-sm text-zinc-400">
+                            Clear images help buyers make decisions
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Badge
+                          variant="outline"
+                          className="border-orange-500/30 bg-orange-500/20 text-orange-400"
+                        >
+                          3
+                        </Badge>
+                        <div>
+                          <h4 className="font-medium text-white">Set Price</h4>
+                          <p className="text-sm text-zinc-400">
+                            Research market value for competitive pricing
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Badge
+                          variant="outline"
+                          className="border-orange-500/30 bg-orange-500/20 text-orange-400"
+                        >
+                          4
+                        </Badge>
+                        <div>
+                          <h4 className="font-medium text-white">Publish</h4>
+                          <p className="text-sm text-zinc-400">
+                            Go live and start receiving inquiries
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Separator className="bg-zinc-700" />
+
+              {/* Listing Form */}
+              <Card className="border-zinc-700 bg-zinc-800/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    ✨ Create New Listing
+                  </CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    Fill out the form below to list your automotive part
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Suspense fallback={<Loader />}>
+                    <AddListingForm />
+                  </Suspense>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <Card className="border-zinc-700 bg-zinc-800/50">
+              <CardContent className="p-8 text-center">
+                <div className="mb-4">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-500/20">
+                    <span className="text-2xl">🔐</span>
+                  </div>
+                  <h3 className="mb-2 text-xl font-semibold text-white">
+                    Sign In Required
+                  </h3>
+                  <p className="mb-6 text-zinc-400">
+                    Only logged in users can list their parts. Please sign in to
+                    continue and start selling your automotive parts.
+                  </p>
+                  {/* <div className="flex justify-center gap-4">
+                    <Button className="bg-orange-500 text-white hover:bg-orange-600">
+                      Sign In
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="border-zinc-600 text-zinc-300 hover:bg-zinc-800"
+                    >
+                      Learn More
+                    </Button>
+                    </div> */}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </main>
+    </HydrateClient>
   );
 }

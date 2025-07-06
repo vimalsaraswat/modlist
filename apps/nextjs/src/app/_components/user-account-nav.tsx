@@ -21,7 +21,6 @@ export async function UserAccountNav() {
     return (
       <form>
         <Button
-          variant="ghost"
           formAction={async () => {
             "use server";
             const res = await auth.api.signInSocial({
@@ -42,18 +41,14 @@ export async function UserAccountNav() {
     );
   }
 
-  console.log(session.user.image);
-
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <UserAvatar
-            className="h-8 w-8"
-            name={session.user.name}
-            imageUrl={session.user.image}
-          />
-        </Button>
+      <DropdownMenuTrigger>
+        <UserAvatar
+          className="h-8 w-8"
+          name={session.user.name}
+          imageUrl={session.user.image}
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <div className="flex items-center justify-start gap-2 p-2">
@@ -82,18 +77,20 @@ export async function UserAccountNav() {
         </DropdownMenuItem> */}
         {/* <DropdownMenuSeparator /> */}
         <DropdownMenuItem className="cursor-pointer" asChild>
-          <button
-            className="w-full"
-            formAction={async () => {
-              "use server";
-              await auth.api.signOut({
-                headers: await headers(),
-              });
-              redirect("/");
-            }}
-          >
-            Sign out
-          </button>
+          <form>
+            <button
+              className="w-full"
+              formAction={async () => {
+                "use server";
+                await auth.api.signOut({
+                  headers: await headers(),
+                });
+                redirect("/");
+              }}
+            >
+              Sign out
+            </button>
+          </form>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
