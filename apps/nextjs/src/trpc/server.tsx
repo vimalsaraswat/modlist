@@ -52,3 +52,8 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
     void queryClient.prefetchQuery(queryOptions);
   }
 }
+
+export const api = cache(async () => {
+  const ctx = await createContext();
+  return appRouter.createCaller(ctx);
+});

@@ -1,7 +1,10 @@
 import { Suspense } from "react";
 
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
-import { ListingGrid, ListingGridSkeleton } from "../_components/listings";
+import {
+  ListingGrid,
+  ListingGridSkeleton,
+} from "../_components/listings/listing-grid";
 import SearchListings from "../_components/listings/search-listings";
 
 export default async function ListingsPage({

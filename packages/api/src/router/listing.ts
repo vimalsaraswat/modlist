@@ -9,6 +9,7 @@ import {
   listingImage,
   make,
   model,
+  user,
 } from "@acme/db/schema";
 import { addListingSchema } from "@acme/validators";
 
@@ -91,8 +92,8 @@ export const listingRouter = {
           price: listing.price,
           makeId: listing.makeId,
           modelId: listing.modelId,
-          categoryId: listing.categoryId,
-          cityId: listing.cityId,
+          category: category.name,
+          city: cities.name,
           latitude: listing.latitude,
           longitude: listing.longitude,
           status: listing.status,
@@ -108,6 +109,8 @@ export const listingRouter = {
             eq(listingImage.position, 0), // only main image
           ),
         )
+        .leftJoin(cities, eq(cities.id, listing.cityId))
+        .leftJoin(category, eq(category.id, listing.categoryId))
         .where(filters.length ? and(...filters) : undefined)
         .orderBy(desc(listing.createdAt))
         .limit(limit)
@@ -121,20 +124,55 @@ export const listingRouter = {
   byId: publicProcedure
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      return await ctx.db
-        .select()
+      const [listingData] = await ctx.db
+        .select({
+          id: listing.id,
+          user: {
+            name: user.name,
+            image: user.image,
+            createdAt: user.createdAt,
+          },
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+          make: make.name,
+          model: model.name,
+          category: category.name,
+          city: cities.name,
+          latitude: listing.latitude,
+          longitude: listing.longitude,
+          status: listing.status,
+          createdAt: listing.createdAt,
+          updatedAt: listing.updatedAt,
+        })
         .from(listing)
+        .leftJoin(make, eq(make.id, listing.makeId))
+        .leftJoin(user, eq(user.id, listing.userId))
+        .leftJoin(model, eq(model.id, listing.modelId))
+        .leftJoin(cities, eq(cities.id, listing.cityId))
+        .leftJoin(category, eq(category.id, listing.categoryId))
         .where(eq(listing.id, input.id))
         .limit(1)
-        .execute()
-        .then((rows) => rows[0] ?? null);
+        .execute();
+
+      if (!listingData) return null;
+
+      const images = await ctx.db
+        .select({ url: listingImage.url })
+        .from(listingImage)
+        .where(eq(listingImage.listingId, input.id))
+        .orderBy(listingImage.position)
+        .execute();
+
+      return {
+        ...listingData,
+        images: images.map((img) => img.url),
+      };
     }),
 
   create: protectedProcedure
     .input(addListingSchema)
     .mutation(async ({ ctx, input }) => {
-      console.log(">>>>>>>>>>>", input);
-
       const data: NewListing = {
         userId: ctx.session.user.id,
         title: input.title,
@@ -149,7 +187,7 @@ export const listingRouter = {
       };
 
       if (input.partNumber && input.partNumber !== "") {
-        data.partNumber = input.partNumber as string;
+        data.partNumber = input.partNumber;
       }
 
       const inserted = await ctx.db.insert(listing).values(data).returning();

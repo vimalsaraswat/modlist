@@ -13,6 +13,7 @@ import {
 } from "@acme/ui/dropdown-menu";
 
 import { auth, getSession } from "~/auth/server";
+import UserAvatar from "./common/user-avatar";
 
 export async function UserAccountNav() {
   const session = await getSession();
@@ -94,35 +95,5 @@ export async function UserAccountNav() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-export function UserAvatar({
-  imageUrl,
-  name,
-  ...props
-}: React.ComponentProps<typeof Avatar> & {
-  imageUrl?: string | null;
-  name: string;
-}) {
-  return (
-    <>
-      <Avatar {...props} className="">
-        {/* <img src={imageUrl} className="h-4 min-w-4" /> */}
-        {imageUrl ? (
-          <AvatarImage
-            alt="Picture"
-            src={
-              imageUrl ||
-              "https://res.cloudinary.com/dwi9tuxwe/image/upload/v1742052880/koa0hosthzzmpeq9140v.jpg"
-            }
-          />
-        ) : (
-          <AvatarFallback>
-            <span className="sr-only">{name}</span>
-          </AvatarFallback>
-        )}
-      </Avatar>
-    </>
   );
 }

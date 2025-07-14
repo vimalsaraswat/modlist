@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
 
-// import { FunnelIcon } from "lucide-react";
-
-// import { useDebouncedCallback } from "use-debounce";
-
-// import { Button } from "@acme/ui/button";
 import { Card, CardContent } from "@acme/ui/card";
+import { useDebounce } from "@acme/ui/hooks";
 import { Input } from "@acme/ui/input";
 import {
   Select,
@@ -53,9 +49,7 @@ const SearchListings = () => {
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  const debouncedUpdate = updateFilters;
-
-  useEffect(() => debouncedUpdate(), [searchQuery, category, makeId]);
+  useDebounce(updateFilters, 500, [searchQuery, category, makeId]);
 
   return (
     <div className="mx-auto max-w-4xl">
