@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import {
   category,
   cities,
+  favourite,
   listing,
   listingImage,
   make,
@@ -124,49 +125,78 @@ export const listingRouter = {
   byId: publicProcedure
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      const [listingData] = await ctx.db
-        .select({
-          id: listing.id,
-          user: {
-            name: user.name,
-            image: user.image,
-            createdAt: user.createdAt,
-          },
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-          make: make.name,
-          model: model.name,
-          category: category.name,
-          city: cities.name,
-          latitude: listing.latitude,
-          longitude: listing.longitude,
-          status: listing.status,
-          createdAt: listing.createdAt,
-          updatedAt: listing.updatedAt,
-        })
-        .from(listing)
-        .leftJoin(make, eq(make.id, listing.makeId))
-        .leftJoin(user, eq(user.id, listing.userId))
-        .leftJoin(model, eq(model.id, listing.modelId))
-        .leftJoin(cities, eq(cities.id, listing.cityId))
-        .leftJoin(category, eq(category.id, listing.categoryId))
-        .where(eq(listing.id, input.id))
-        .limit(1)
-        .execute();
+      const { id: listingId } = input;
+      const userId = ctx.session?.user.id;
 
+      const fetchListingWithJoins = () =>
+        ctx.db
+          .select({
+            id: listing.id,
+            user: {
+              name: user.name,
+              image: user.image,
+              createdAt: user.createdAt,
+            },
+            title: listing.title,
+            description: listing.description,
+            price: listing.price,
+            make: make.name,
+            model: model.name,
+            category: category.name,
+            city: cities.name,
+            latitude: listing.latitude,
+            longitude: listing.longitude,
+            status: listing.status,
+            createdAt: listing.createdAt,
+            updatedAt: listing.updatedAt,
+          })
+          .from(listing)
+          .leftJoin(make, eq(make.id, listing.makeId))
+          .leftJoin(user, eq(user.id, listing.userId))
+          .leftJoin(model, eq(model.id, listing.modelId))
+          .leftJoin(cities, eq(cities.id, listing.cityId))
+          .leftJoin(category, eq(category.id, listing.categoryId))
+          .where(eq(listing.id, listingId))
+          .limit(1)
+          .execute();
+
+      const fetchListingImages = () =>
+        ctx.db
+          .select({ url: listingImage.url })
+          .from(listingImage)
+          .where(eq(listingImage.listingId, listingId))
+          .orderBy(listingImage.position)
+          .execute();
+
+      const fetchIsFavourite = () => {
+        if (!userId) return false;
+        return ctx.db
+          .select({ id: favourite.id })
+          .from(favourite)
+          .where(
+            and(
+              eq(favourite.userId, userId),
+              eq(favourite.listingId, listingId),
+            ),
+          )
+          .limit(1)
+          .execute()
+          .then((res) => res.length > 0);
+      };
+
+      const [listingResult, imageRows, isFavourite] = await Promise.all([
+        fetchListingWithJoins(),
+        fetchListingImages(),
+        fetchIsFavourite(),
+      ]);
+
+      const listingData = listingResult[0];
       if (!listingData) return null;
-
-      const images = await ctx.db
-        .select({ url: listingImage.url })
-        .from(listingImage)
-        .where(eq(listingImage.listingId, input.id))
-        .orderBy(listingImage.position)
-        .execute();
 
       return {
         ...listingData,
-        images: images.map((img) => img.url),
+        images: imageRows.map((img) => img.url),
+        isFavourite,
       };
     }),
 
@@ -206,5 +236,40 @@ export const listingRouter = {
       }
 
       return { id };
+    }),
+
+  toggleFavourite: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const existingFavourite = await ctx.db
+        .select()
+        .from(favourite)
+        .where(
+          and(eq(favourite.userId, userId), eq(favourite.listingId, input.id)),
+        )
+        .limit(1)
+        .execute();
+
+      if (existingFavourite.length > 0) {
+        // If it's already a favourite, remove it
+        await ctx.db
+          .delete(favourite)
+          .where(
+            and(
+              eq(favourite.userId, userId),
+              eq(favourite.listingId, input.id),
+            ),
+          )
+          .execute();
+        return { added: false };
+      } else {
+        // If it's not a favourite, add it
+        await ctx.db
+          .insert(favourite)
+          .values({ userId, listingId: input.id })
+          .execute();
+        return { added: true };
+      }
     }),
 } satisfies TRPCRouterRecord;

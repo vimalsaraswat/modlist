@@ -15,15 +15,18 @@ import Header from "./_components/header";
 export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
-      ? "https://turbo.t3.gg"
+      ? "https://modlist-nextjs.vercel.app"
       : "http://localhost:3000",
   ),
   title: "ModList",
-  description: "Simple monorepo with shared backend for web & mobile apps",
+  description:
+    "The ultimate marketplace for car modifications and performance parts. Buy and sell with confidence.",
+  keywords:
+    "car parts, automotive, tuning, modifications, performance, marketplace",
   openGraph: {
     title: "ModList",
     description: "Simple monorepo with shared backend for web & mobile apps",
-    url: "https://create-t3-turbo.vercel.app",
+    url: "https://modlist-nextjs.vercel.app",
     siteName: "ModList",
   },
   twitter: {
@@ -51,15 +54,15 @@ const geistMono = Geist_Mono({
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="no-scrollbar" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans text-foreground antialiased",
+          "no-scrollbar h-screen overflow-auto bg-background font-sans text-foreground antialiased",
           geistSans.variable,
           geistMono.variable,
         )}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <TRPCReactProvider>
             <Header />
             {props.children}
@@ -67,7 +70,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           {/* <div className="fixed bottom-4 right-4">
             <ThemeToggle />
           </div> */}
-          <Toaster />
+          <Toaster richColors />
         </ThemeProvider>
       </body>
     </html>

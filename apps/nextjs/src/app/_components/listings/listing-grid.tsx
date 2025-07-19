@@ -15,6 +15,8 @@ export function ListingGrid() {
   const searchQuery = searchParams.get("query");
   const category = searchParams.get("category");
   const make = searchParams.get("make");
+  const city = searchParams.get("city");
+
   const categoryId =
     category && !isNaN(Number(category)) && Number(category) >= 0
       ? Number(category)
@@ -23,6 +25,10 @@ export function ListingGrid() {
     make && !isNaN(Number(make)) && Number(make) >= 0
       ? Number(make)
       : undefined;
+  const cityId =
+    city && !isNaN(Number(city)) && Number(city) >= 0
+      ? Number(city)
+      : undefined;
 
   const { data: listings = [] } = useSuspenseQuery(
     trpc.listing.list.queryOptions({
@@ -30,6 +36,7 @@ export function ListingGrid() {
       offset: 0,
       categoryId,
       makeId,
+      cityId,
       keyword:
         typeof searchQuery === "string" && searchQuery !== ""
           ? searchQuery
@@ -42,7 +49,7 @@ export function ListingGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-3">
       {listings.map((item) => (
         <ListingCard
           key={item.id}
