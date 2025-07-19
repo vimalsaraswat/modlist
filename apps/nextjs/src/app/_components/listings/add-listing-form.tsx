@@ -10,8 +10,8 @@ import {
 } from "@tanstack/react-query";
 import {
   Car,
-  DollarSign,
   ImageIcon,
+  IndianRupee,
   MapPin,
   Tag,
   Upload,
@@ -413,7 +413,7 @@ export default function AddListingForm() {
         <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
-              <DollarSign size={24} className="text-orange-400" />
+              <IndianRupee size={24} className="text-orange-400" />
               Price & Location
             </CardTitle>
           </CardHeader>
@@ -423,9 +423,9 @@ export default function AddListingForm() {
                 name="price"
                 render={({ field }) => (
                   <div>
-                    <Label className="text-white">Price (CAD) *</Label>
+                    <Label className="text-white">Price (INR) *</Label>
                     <div className="relative">
-                      <DollarSign
+                      <IndianRupee
                         className="absolute left-3 top-1/2 -translate-y-1/2 transform text-zinc-400"
                         size={16}
                       />

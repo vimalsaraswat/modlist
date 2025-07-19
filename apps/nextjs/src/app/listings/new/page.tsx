@@ -26,7 +26,7 @@ export default async function ListingsPage() {
 
   return (
     <HydrateClient>
-      <main className="min-h-screen bg-zinc-900 pt-20">
+      <main className="min-h-screen bg-zinc-900">
         {/* Hero Section */}
         <div className="relative bg-gradient-to-br from-zinc-900 via-zinc-800 to-orange-900/30 py-16">
           <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-orange-500/10 to-red-500/10"></div>
