@@ -1,6 +1,11 @@
-import React from "react";
-import { Badge, Car, Cpu, Disc, Gauge, Wrench, Zap } from "lucide-react";
+// /app/_components/home/category-showcase.tsx
 
+"use client";
+
+import Link from "next/link";
+import { Car, Cpu, Disc, Gauge, Settings, Wrench, Zap } from "lucide-react";
+
+import { Button } from "@acme/ui/button";
 import { Card, CardContent } from "@acme/ui/card";
 
 const categories = [
@@ -9,88 +14,76 @@ const categories = [
     name: "Performance",
     description: "Turbo kits, intakes, exhausts",
     count: "2,450",
-    variant: "performance" as const,
   },
   {
     icon: Disc,
     name: "Wheels & Tires",
     description: "Rims, tires, spacers",
     count: "3,120",
-    variant: "wheels" as const,
   },
   {
     icon: Wrench,
     name: "Engine Parts",
     description: "Pistons, cams, headers",
     count: "1,890",
-    variant: "engine" as const,
   },
   {
     icon: Car,
     name: "Body & Aero",
     description: "Spoilers, bumpers, kits",
     count: "1,560",
-    variant: "body" as const,
   },
   {
     icon: Gauge,
     name: "Interior",
     description: "Seats, gauges, steering",
     count: "980",
-    variant: "interior" as const,
+  },
+  {
+    icon: Settings,
+    name: "Suspension",
+    description: "Coilovers, shocks, bushings",
+    count: "1,230",
   },
   {
     icon: Cpu,
     name: "Electronics",
     description: "ECUs, wiring, sensors",
     count: "750",
-    variant: "electronics" as const,
   },
 ];
 
-const CategoryShowcase = () => {
+export default function CategoryShowcase() {
   return (
-    <section className="bg-zinc-900 py-32">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="animate-slide-up mb-16 text-center">
-          <h2 className="mb-6 text-5xl font-bold text-white md:text-6xl">
-            Find your{" "}
-            <span className="neon-text text-orange-400">perfect part</span>
+    <section className="py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 text-4xl font-bold md:text-5xl">
+            Popular <span className="text-accent">Categories</span>
           </h2>
-          <p className="mx-auto max-w-3xl text-xl text-zinc-400">
-            Browse thousands of quality used parts from fellow enthusiasts. From
-            daily drivers to track builds, we've got you covered.
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            Browse thousands of quality used car parts from sellers across
+            India.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category, index) => (
             <Card
-              key={category.name}
-              className="tuner-glow animate-slide-up group cursor-pointer border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:bg-zinc-800/70"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              key={index}
+              className="group transition-all duration-300 hover:bg-card/70"
             >
-              <CardContent className="relative overflow-hidden p-8">
-                {/* Background Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-500/5 transition-all duration-300 group-hover:from-orange-500/10 group-hover:to-red-500/10" />
-
-                <div className="relative z-10">
-                  <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
-                    <category.icon className="text-white" size={28} />
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400 transition-transform group-hover:scale-110">
+                    <category.icon size={24} />
                   </div>
-
-                  <h3 className="mb-3 text-2xl font-bold text-white transition-colors group-hover:text-orange-400">
-                    {category.name}
-                  </h3>
-
-                  <p className="mb-4 leading-relaxed text-zinc-400">
-                    {category.description}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <Badge>{category.count} listings</Badge>
-                    <div className="text-zinc-400 transition-colors duration-300 group-hover:translate-x-1 group-hover:text-orange-400">
-                      →
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">
+                      {category.name}
+                    </h3>
+                    <p className="mt-1 text-zinc-400">{category.description}</p>
+                    <div className="mt-3 text-sm font-medium text-orange-400">
+                      {category.count} listings
                     </div>
                   </div>
                 </div>
@@ -98,18 +91,12 @@ const CategoryShowcase = () => {
             </Card>
           ))}
         </div>
-
-        <div
-          className="animate-slide-up mt-16 text-center"
-          style={{ animationDelay: "0.6s" }}
-        >
-          <button className="rounded-full bg-orange-500 px-8 py-4 text-lg font-medium text-white transition-colors duration-300 hover:scale-105 hover:bg-orange-600">
-            Browse All Categories
-          </button>
+        <div className="mt-12 text-center">
+          <Button size="lg" asChild variant="outline">
+            <Link href="/listings">Browse All Categories</Link>
+          </Button>
         </div>
       </div>
     </section>
   );
-};
-
-export default CategoryShowcase;
+}

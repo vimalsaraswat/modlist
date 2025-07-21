@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { cn } from "@acme/ui";
-import { ThemeProvider } from "@acme/ui/theme";
+import { ThemeProvider, ThemeToggle } from "@acme/ui/theme";
 import { Toaster } from "@acme/ui/toast";
 
 import { TRPCReactProvider } from "~/trpc/react";
@@ -67,9 +67,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             <Header />
             {props.children}
           </TRPCReactProvider>
-          {/* <div className="fixed bottom-4 right-4">
+          <div className="fixed bottom-4 right-4">
             <ThemeToggle />
-          </div> */}
+          </div>
           <Toaster richColors />
         </ThemeProvider>
       </body>

@@ -21,9 +21,16 @@ import { z } from "zod/v4";
 
 import { Button } from "@acme/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
-import { Form, FormField, FormMessage, useForm } from "@acme/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  useForm,
+} from "@acme/ui/form";
 import { Input } from "@acme/ui/input";
-import { Label } from "@acme/ui/label";
 import {
   Select,
   SelectContent,
@@ -104,7 +111,7 @@ export default function AddListingForm() {
   const makeId = form.watch("makeId");
   const { data: models = [], isLoading: isModelsLoading } = useQuery(
     trpc.listing.modelListByMake.queryOptions(
-      { makeId },
+      { makeId: Number(makeId) },
       { enabled: !!makeId },
     ),
   );
@@ -174,10 +181,10 @@ export default function AddListingForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {/* Images Section */}
-        <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <ImageIcon size={24} className="text-orange-400" />
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="text-accent" />
               Photos (Up to 5)
             </CardTitle>
           </CardHeader>
@@ -188,7 +195,7 @@ export default function AddListingForm() {
                   <img
                     src={src}
                     alt={`Preview ${idx + 1}`}
-                    className="h-32 w-full rounded-lg border-2 border-zinc-600 object-cover"
+                    className="aspect-square h-32 h-full w-full rounded-lg border border-border object-cover"
                   />
                   <Button
                     type="button"
@@ -202,12 +209,11 @@ export default function AddListingForm() {
                 </div>
               ))}
               {images.length < 5 && (
-                <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-zinc-600 transition-colors hover:border-orange-400">
-                  <Upload
-                    className="mb-2 text-zinc-400 hover:text-orange-400"
-                    size={24}
-                  />
-                  <span className="text-sm text-zinc-400">Add Photo</span>
+                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border transition-colors hover:border-accent">
+                  <Upload className="mb-2 text-muted-foreground" size={24} />
+                  <span className="text-sm text-muted-foreground">
+                    Add Photo
+                  </span>
                   <input
                     type="file"
                     multiple
@@ -218,7 +224,7 @@ export default function AddListingForm() {
                 </label>
               )}
             </div>
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               Add clear photos from multiple angles. First photo will be the
               main image.
             </p>
@@ -226,52 +232,54 @@ export default function AddListingForm() {
         </Card>
 
         {/* Basic Info */}
-        <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <Tag size={24} className="text-orange-400" />
+            <CardTitle className="flex items-center gap-2">
+              <Tag className="text-accent" />
               Basic Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <FormField
+              control={form.control}
               name="title"
               render={({ field }) => (
-                <div>
-                  <Label htmlFor="title" className="text-white">
-                    Title *
-                  </Label>
-                  <Input
-                    {...field}
-                    id="title"
-                    placeholder="e.g., Garrett GT2860RS Turbo Kit"
-                    className="border-zinc-600 bg-zinc-700/50 text-white"
-                  />
+                <FormItem>
+                  <FormLabel>Title *</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="e.g., Garrett GT2860RS Turbo Kit"
+                    />
+                  </FormControl>
                   <FormMessage />
-                </div>
+                </FormItem>
               )}
             />
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
+                control={form.control}
                 name="categoryId"
                 render={({ field }) => (
-                  <div>
-                    <Label className="text-white">Category *</Label>
+                  <FormItem>
+                    <FormLabel>Category *</FormLabel>
                     <Select
                       onValueChange={(v) => field.onChange(Number(v))}
-                      value={String(field.value ?? "")}
+                      value={String((field.value as number | undefined) ?? "")}
                     >
-                      <SelectTrigger className="border-zinc-600 bg-zinc-700/50 text-white">
-                        <SelectValue
-                          placeholder={
-                            isCategoriesLoading
-                              ? "Loading..."
-                              : "Select category"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="border-zinc-700 bg-zinc-800">
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isCategoriesLoading
+                                ? "Loading..."
+                                : "Select category"
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                         {categories.map((cat) => (
                           <SelectItem key={cat.id} value={String(cat.id)}>
                             {cat.name}
@@ -280,70 +288,75 @@ export default function AddListingForm() {
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </div>
+                  </FormItem>
                 )}
               />
 
               <FormField
-                name="brand"
+                control={form.control}
+                name="partNumber"
                 render={({ field }) => (
-                  <div>
-                    <Label className="text-white">Brand</Label>
-                    <Input
-                      {...field}
-                      placeholder="e.g., Garrett"
-                      className="border-zinc-600 bg-zinc-700/50 text-white"
-                    />
+                  <FormItem>
+                    <FormLabel>Part Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., GT2860RS-KIT" />
+                    </FormControl>
                     <FormMessage />
-                  </div>
+                  </FormItem>
                 )}
               />
             </div>
 
             <FormField
+              control={form.control}
               name="description"
               render={({ field }) => (
-                <div>
-                  <Label className="text-white">Description *</Label>
-                  <Textarea
-                    {...field}
-                    placeholder="Describe the part..."
-                    className="min-h-32 border-zinc-600 bg-zinc-700/50 text-white"
-                  />
+                <FormItem>
+                  <FormLabel>Description *</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Describe the part..."
+                      className="min-h-32"
+                    />
+                  </FormControl>
                   <FormMessage />
-                </div>
+                </FormItem>
               )}
             />
           </CardContent>
         </Card>
 
         {/* Car Compatibility */}
-        <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <Car size={24} className="text-orange-400" />
+            <CardTitle className="flex items-center gap-2">
+              <Car className="text-accent" />
               Car Compatibility
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <FormField
+                control={form.control}
                 name="makeId"
                 render={({ field }) => (
-                  <div>
-                    <Label className="text-white">Make *</Label>
+                  <FormItem>
+                    <FormLabel>Make *</FormLabel>
                     <Select
                       onValueChange={(v) => field.onChange(Number(v))}
-                      value={String(field.value ?? "")}
+                      value={String((field.value as number | undefined) ?? "")}
                     >
-                      <SelectTrigger className="border-zinc-600 bg-zinc-700/50 text-white">
-                        <SelectValue
-                          placeholder={
-                            isMakesLoading ? "Loading..." : "Select make"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="border-zinc-700 bg-zinc-800">
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isMakesLoading ? "Loading..." : "Select make"
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                         <SelectItem value="0">Universal Fitment</SelectItem>
                         {makes.map((m) => (
                           <SelectItem key={m.id} value={String(m.id)}>
@@ -353,32 +366,35 @@ export default function AddListingForm() {
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </div>
+                  </FormItem>
                 )}
               />
 
               <FormField
+                control={form.control}
                 name="modelId"
                 render={({ field }) => (
-                  <div>
-                    <Label className="text-white">Model</Label>
+                  <FormItem>
+                    <FormLabel>Model</FormLabel>
                     <Select
                       onValueChange={(v) => field.onChange(Number(v))}
-                      value={String(field.value ?? "")}
+                      value={String((field.value as number | undefined) ?? "")}
                       disabled={!makeId || isModelsLoading}
                     >
-                      <SelectTrigger className="border-zinc-600 bg-zinc-700/50 text-white">
-                        <SelectValue
-                          placeholder={
-                            makeId
-                              ? isModelsLoading
-                                ? "Loading..."
-                                : "Select model"
-                              : "Select make first"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="border-zinc-700 bg-zinc-800">
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              makeId
+                                ? isModelsLoading
+                                  ? "Loading..."
+                                  : "Select model"
+                                : "Select make first"
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                         {models.map((m) => (
                           <SelectItem key={m.id} value={String(m.id)}>
                             {m.name}
@@ -387,22 +403,7 @@ export default function AddListingForm() {
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </div>
-                )}
-              />
-
-              <FormField
-                name="partNumber"
-                render={({ field }) => (
-                  <div>
-                    <Label className="text-white">Part Number</Label>
-                    <Input
-                      {...field}
-                      placeholder="e.g., GT2860RS-KIT"
-                      className="border-zinc-600 bg-zinc-700/50 text-white"
-                    />
-                    <FormMessage />
-                  </div>
+                  </FormItem>
                 )}
               />
             </div>
@@ -410,59 +411,69 @@ export default function AddListingForm() {
         </Card>
 
         {/* Price & Location */}
-        <Card className="border-zinc-700/50 bg-zinc-800/50 backdrop-blur-xl">
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <IndianRupee size={24} className="text-orange-400" />
-              Price & Location
+            <CardTitle className="flex items-center gap-2">
+              <IndianRupee className="text-accent" />
+              {"Price & Location"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
+                control={form.control}
                 name="price"
                 render={({ field }) => (
-                  <div>
-                    <Label className="text-white">Price (INR) *</Label>
+                  <FormItem>
+                    <FormLabel>Price (INR) *</FormLabel>
                     <div className="relative">
                       <IndianRupee
-                        className="absolute left-3 top-1/2 -translate-y-1/2 transform text-zinc-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                         size={16}
                       />
                       <Input
                         {...field}
+                        value={field.value as number}
                         type="number"
                         placeholder="0"
-                        className="border-zinc-600 bg-zinc-700/50 pl-10 text-white"
+                        className="pl-10"
+                        inputMode="numeric"
                       />
                     </div>
                     <FormMessage />
-                  </div>
+                  </FormItem>
                 )}
               />
 
               <FormField
+                control={form.control}
                 name="cityId"
                 render={({ field }) => (
-                  <div>
-                    <Label className="text-white">Location *</Label>
+                  <FormItem>
+                    <FormLabel>Location *</FormLabel>
                     <div className="relative">
                       <MapPin
-                        className="absolute left-3 top-1/2 -translate-y-1/2 transform text-zinc-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                         size={16}
                       />
                       <Select
                         onValueChange={(v) => field.onChange(Number(v))}
-                        value={String(field.value ?? "")}
+                        value={String(
+                          (field.value as number | undefined) ?? "",
+                        )}
                       >
-                        <SelectTrigger className="border-zinc-600 bg-zinc-700/50 pl-10 text-white">
-                          <SelectValue
-                            placeholder={
-                              isCitiesLoading ? "Loading..." : "Select location"
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent className="border-zinc-700 bg-zinc-800">
+                        <FormControl>
+                          <SelectTrigger className="pl-10">
+                            <SelectValue
+                              placeholder={
+                                isCitiesLoading
+                                  ? "Loading..."
+                                  : "Select location"
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
                           {cities.map((c) => (
                             <SelectItem key={c.id} value={String(c.id)}>
                               {c.name}
@@ -472,7 +483,7 @@ export default function AddListingForm() {
                       </Select>
                     </div>
                     <FormMessage />
-                  </div>
+                  </FormItem>
                 )}
               />
             </div>
@@ -480,27 +491,17 @@ export default function AddListingForm() {
         </Card>
 
         {/* Submit Buttons */}
-        <div className="flex flex-col justify-end gap-4 sm:flex-row">
-          {/* <Button
-            variant="outline"
-            type="button"
-            className="border-zinc-600 text-white hover:bg-zinc-800"
-          >
-            Save as Draft
-          </Button> */}
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="flex items-center gap-2 bg-orange-500 px-12 text-white hover:bg-orange-600"
-          >
-            {isLoading ? (
-              <Loader size="sm" className="border-secondary" />
-            ) : (
-              <Upload size={16} />
-            )}
-            Publish Listing
-          </Button>
-        </div>
+
+        <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+          {isLoading ? (
+            <Loader size="sm" className="mr-2 border-secondary" />
+          ) : (
+            <>
+              <Upload size={16} className="mr-2" />
+            </>
+          )}{" "}
+          Publish Listing
+        </Button>
       </form>
     </Form>
   );
