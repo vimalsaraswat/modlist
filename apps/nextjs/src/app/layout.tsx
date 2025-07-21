@@ -57,7 +57,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <html lang="en" className="no-scrollbar" suppressHydrationWarning>
       <body
         className={cn(
-          "no-scrollbar h-screen overflow-auto bg-background font-sans text-foreground antialiased",
+          "no-scrollbar h-dvh overflow-auto bg-background font-sans text-foreground antialiased",
           geistSans.variable,
           geistMono.variable,
         )}

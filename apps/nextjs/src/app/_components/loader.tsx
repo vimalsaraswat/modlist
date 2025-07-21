@@ -18,7 +18,7 @@ const Loader: React.FC<SimpleLoaderProps> = ({
   };
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center space-y-4">
+    <div className="flex h-dvh flex-col items-center justify-center space-y-4">
       {/* Spinning Icon */}
       <div
         className={cn(

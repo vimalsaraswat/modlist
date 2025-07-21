@@ -19,6 +19,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -246,7 +247,7 @@ const Filters = () => {
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="max-h-screen w-full space-y-2 overflow-auto pt-2 backdrop-blur-md"
+              className="max-h-dvh w-full space-y-2 overflow-auto pt-2 backdrop-blur-md"
             >
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
@@ -254,9 +255,15 @@ const Filters = () => {
                   Filter Parts
                 </SheetTitle>
               </SheetHeader>
-              <div>
+              <div className="py-10">
                 <FilterSection />
               </div>
+
+              <SheetFooter className="bottom-0">
+                <Button onClick={() => setIsOpen(false)} variant="secondary">
+                  View Results
+                </Button>
+              </SheetFooter>
             </SheetContent>
           </Sheet>
         </div>

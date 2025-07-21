@@ -4,7 +4,7 @@ import { Button } from "@acme/ui/button";
 
 export default function Hero() {
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
+    <section className="relative flex min-h-dvh items-center justify-center overflow-hidden">
       {/* Gradient Overlay */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-muted/20 via-accent/20 to-background/25"></div>
 

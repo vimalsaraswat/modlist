@@ -29,7 +29,7 @@ export default async function ListingDetailPage({
   if (!listing) return notFound();
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-dvh">
       <div className="relative overflow-hidden">
         {/* <div className="!duration-[5000] absolute inset-0 animate-pulse bg-accent/10"></div> */}
         <div className="absolute inset-0 bg-accent/5"></div>
