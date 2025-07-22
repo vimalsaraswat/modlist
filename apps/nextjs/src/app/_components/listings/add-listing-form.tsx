@@ -43,6 +43,7 @@ import { toast } from "@acme/ui/toast";
 import { addListingSchema } from "@acme/validators";
 
 import { useTRPC } from "~/trpc/react";
+import Combobox from "../common/combobox";
 import Loader from "../loader";
 
 export default function AddListingForm() {
@@ -341,9 +342,20 @@ export default function AddListingForm() {
                 control={form.control}
                 name="makeId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col gap-2">
                     <FormLabel>Make *</FormLabel>
-                    <Select
+                    <Combobox
+                      value={String((field.value as number | undefined) ?? "")}
+                      onChange={(v) => field.onChange(Number(v))}
+                      options={makes.map((m) => ({
+                        label: m.name,
+                        value: String(m.id),
+                      }))}
+                      placeholder={
+                        isMakesLoading ? "Loading..." : "Select make"
+                      }
+                    />
+                    {/* <Select
                       onValueChange={(v) => field.onChange(Number(v))}
                       value={String((field.value as number | undefined) ?? "")}
                     >
@@ -364,7 +376,7 @@ export default function AddListingForm() {
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
+                    </Select> */}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -374,9 +386,24 @@ export default function AddListingForm() {
                 control={form.control}
                 name="modelId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col gap-2">
                     <FormLabel>Model</FormLabel>
-                    <Select
+                    <Combobox
+                      value={String((field.value as number | undefined) ?? "")}
+                      onChange={(v) => field.onChange(Number(v))}
+                      options={models.map((m) => ({
+                        label: m.name,
+                        value: String(m.id),
+                      }))}
+                      placeholder={
+                        makeId
+                          ? isModelsLoading
+                            ? "Loading..."
+                            : "Select model"
+                          : "Select make first"
+                      }
+                    />
+                    {/* <Select
                       onValueChange={(v) => field.onChange(Number(v))}
                       value={String((field.value as number | undefined) ?? "")}
                       disabled={!makeId || isModelsLoading}
@@ -401,7 +428,7 @@ export default function AddListingForm() {
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
+                    </Select> */}
                     <FormMessage />
                   </FormItem>
                 )}

@@ -10,13 +10,6 @@ import { Button } from "@acme/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
 import { Label } from "@acme/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@acme/ui/select";
-import {
   Sheet,
   SheetContent,
   SheetFooter,
@@ -26,6 +19,7 @@ import {
 } from "@acme/ui/sheet";
 
 import { useTRPC } from "~/trpc/react";
+import Combobox from "../common/combobox";
 
 const defaultFilters = {
   category: "all",
@@ -189,12 +183,18 @@ const Filters = () => {
       {hasActiveFilters && <ActiveFilters />}
 
       {filterFields.map((field, i) => (
-        <div className="space-y-2" key={i}>
+        <div className="flex flex-col gap-2" key={i}>
           <div className="flex items-center gap-2">
             {field.icon}
             <Label>{field.label}</Label>
           </div>
-          <Select value={field.value} onValueChange={field.onChange}>
+          <Combobox
+            value={field.value}
+            onChange={field.onChange}
+            options={field.options}
+            placeholder={`Select ${field.label.toLowerCase()}`}
+          />
+          {/* <Select value={field.value} onValueChange={field.onChange}>
             <SelectTrigger className="w-full">
               <SelectValue
                 placeholder={`Select ${field.label.toLowerCase()}`}
@@ -207,7 +207,7 @@ const Filters = () => {
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select> */}
         </div>
       ))}
     </div>
