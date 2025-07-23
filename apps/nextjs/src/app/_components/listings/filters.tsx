@@ -59,7 +59,7 @@ const Filters = () => {
   );
 
   const updateFilters = useCallback(() => {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
     if (filters.category !== "all") params.set("category", filters.category);
     if (filters.makeId !== -1) params.set("make", String(filters.makeId));
 

@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { Button } from "@acme/ui/button";
 
+import SearchBar from "./search-bar";
+
 export default function Hero() {
   return (
     <section className="relative flex min-h-dvh items-center justify-center overflow-hidden">
@@ -15,18 +17,24 @@ export default function Hero() {
           <span className="neon-text inline-block text-accent">Tuner's</span>{" "}
           Marketplace
         </h1>
-        <p className="mx-auto mb-10 max-w-2xl text-lg text-secondary-foreground md:text-xl">
+
+        {/* Search Bar */}
+        <SearchBar />
+
+        <p className="mx-auto mb-8 max-w-2xl text-lg text-secondary-foreground md:text-xl">
           Buy and sell car parts, mods, and accessories.
-          <br /> Connect with fellow enthusiasts.
+          <br />
+          Connect with fellow enthusiasts across India.
         </p>
 
+        {/* CTA Buttons */}
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Button
             asChild
             size="lg"
             className="px-8 py-6 text-lg transition-transform hover:scale-[1.02]"
           >
-            <Link href="/listings">Browse Parts</Link>
+            <Link href="/listings">Browse All Parts</Link>
           </Button>
           <Button
             asChild
