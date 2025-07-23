@@ -24,6 +24,7 @@ import Combobox from "../common/combobox";
 const defaultFilters = {
   category: "all",
   makeId: -1,
+  modelId: -1,
   city: -1,
 };
 
@@ -37,6 +38,7 @@ const Filters = () => {
   const [filters, setFilters] = useState({
     category: searchParams.get("category") ?? "all",
     makeId: Number(searchParams.get("make")) || -1,
+    modelId: Number(searchParams.get("model")) || -1,
     city: Number(searchParams.get("city")) || -1,
   });
 
@@ -49,10 +51,21 @@ const Filters = () => {
   const { data: makes = [] } = useQuery(trpc.listing.makeList.queryOptions());
   const { data: cities = [] } = useQuery(trpc.listing.cityList.queryOptions());
 
+  const { data: models = [] } = useQuery(
+    trpc.listing.modelListByMake.queryOptions(
+      { makeId: Number(filters.makeId) },
+      { enabled: !!filters.makeId && filters.makeId !== -1 },
+    ),
+  );
+
   const updateFilters = useCallback(() => {
     const params = new URLSearchParams();
     if (filters.category !== "all") params.set("category", filters.category);
     if (filters.makeId !== -1) params.set("make", String(filters.makeId));
+
+    if (filters.makeId !== -1 && filters.modelId !== -1)
+      params.set("model", String(filters.modelId));
+
     if (filters.city !== -1) params.set("city", String(filters.city));
 
     const queryStr = params.toString();
@@ -78,6 +91,7 @@ const Filters = () => {
     return [
       filters.category !== "all" ? filters.category : null,
       filters.makeId !== -1 ? filters.makeId : null,
+      filters.modelId !== -1 ? filters.modelId : null,
       filters.city !== -1 ? filters.city : null,
     ].filter(Boolean).length;
   }, [filters]);
@@ -103,6 +117,11 @@ const Filters = () => {
     getNameById(filters.makeId, makes) && {
       label: getNameById(filters.makeId, makes),
       onClear: () => setFilters((f) => ({ ...f, makeId: -1 })),
+      color: "green",
+    },
+    getNameById(filters.modelId, makes) && {
+      label: getNameById(filters.modelId, makes),
+      onClear: () => setFilters((f) => ({ ...f, modelId: -1 })),
       color: "green",
     },
     getNameById(filters.city, cities) && {
@@ -131,6 +150,17 @@ const Filters = () => {
       options: [
         { label: "All Makes", value: "-1" },
         ...makes.map((m) => ({ label: m.name, value: String(m.id) })),
+      ],
+    },
+    {
+      icon: <CarIcon className="h-4 w-4 text-zinc-400" />,
+      label: "Model",
+      value: String(filters.modelId),
+      onChange: (v: string) =>
+        setFilters((f) => ({ ...f, modelId: Number(v) })),
+      options: [
+        { label: "All Models", value: "-1" },
+        ...models.map((m) => ({ label: m.name, value: String(m.id) })),
       ],
     },
     {

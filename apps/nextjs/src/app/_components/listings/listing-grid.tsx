@@ -15,6 +15,7 @@ export function ListingGrid() {
   const searchQuery = searchParams.get("query");
   const category = searchParams.get("category");
   const make = searchParams.get("make");
+  const model = searchParams.get("model");
   const city = searchParams.get("city");
 
   const categoryId =
@@ -24,6 +25,10 @@ export function ListingGrid() {
   const makeId =
     make && !isNaN(Number(make)) && Number(make) >= 0
       ? Number(make)
+      : undefined;
+  const modelId =
+    model && !isNaN(Number(model)) && Number(model) >= 0
+      ? Number(model)
       : undefined;
   const cityId =
     city && !isNaN(Number(city)) && Number(city) >= 0
@@ -36,6 +41,7 @@ export function ListingGrid() {
       offset: 0,
       categoryId,
       makeId,
+      modelId,
       cityId,
       keyword:
         typeof searchQuery === "string" && searchQuery !== ""

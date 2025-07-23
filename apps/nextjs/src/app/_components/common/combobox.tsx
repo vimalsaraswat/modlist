@@ -29,7 +29,7 @@ export default function Combobox({
   placeholder: string;
 }) {
   return (
-    <Popover>
+    <Popover modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="secondary"
