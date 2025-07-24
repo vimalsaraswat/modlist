@@ -9,7 +9,7 @@ import { Card, CardContent } from "@acme/ui/card";
 interface ListingCardProps {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   price: number;
   createdAt: Date;
   category?: string | null;
@@ -27,8 +27,8 @@ const ListingCard = ({
   city,
   imageUrl,
 }: ListingCardProps) => (
-  <Link href={`/listings/${id}`}>
-    <Card className="group cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.01]">
+  <Link href={`/listings/${id}`} className="place-self-stretch">
+    <Card className="group h-full cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.01]">
       <div className="relative overflow-hidden rounded-t-lg">
         {imageUrl ? (
           <Image
@@ -48,17 +48,23 @@ const ListingCard = ({
         </Badge>
       </div>
       <CardContent className="p-4">
-        <h3 className="mb-2 line-clamp-2 font-bold text-white">{title}</h3>
-        <p className="mb-4 line-clamp-2 text-sm text-gray-400">{description}</p>
+        <h3 className="mb-2 line-clamp-2 font-bold">{title}</h3>
+        {description && (
+          <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+            {description}
+          </p>
+        )}
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-lg font-bold text-orange-400">
+          <span className="text-lg font-bold text-accent">
             ₹{price.toLocaleString()}
           </span>
-          <div className="flex items-center gap-1 text-sm text-gray-400">
-            <MapPinIcon size={14} /> <span>{city}</span>
-          </div>
+          {city && (
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <MapPinIcon size={14} /> <span>{city}</span>
+            </div>
+          )}
         </div>
-        <div className="mb-4 flex items-center justify-between text-sm text-gray-400">
+        <div className="mb-4 flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <ClockIcon size={14} />
             <span>

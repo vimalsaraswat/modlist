@@ -1,8 +1,7 @@
 import { headers } from "next/headers";
-// import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@acme/ui/avatar";
 import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
@@ -52,7 +51,10 @@ export async function UserAccountNav() {
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <div className="flex items-center justify-start gap-2 p-2">
+        <Link
+          href="/profile"
+          className="flex items-center justify-start gap-2 p-2"
+        >
           <UserAvatar
             className="h-8 w-8"
             name={session.user.name}
@@ -68,7 +70,7 @@ export async function UserAccountNav() {
               </p>
             )}
           </div>
-        </div>
+        </Link>
         <DropdownMenuSeparator />
         {/* <DropdownMenuItem asChild>
           <Link href="/dashboard">Dashboard</Link>
