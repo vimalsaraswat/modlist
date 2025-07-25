@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host");
 
+  console.log("hostname", hostname);
+
   if (
     hostname === "modlist.shop" &&
     new URL(request.url).pathname !== "/waitlist"
@@ -16,13 +18,13 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /**
-     * Match all request paths except for:
-     * - /api routes
-     * - /_next/static (static files)
-     * - /_next/image (image optimization)
-     * - /favicon.ico
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
