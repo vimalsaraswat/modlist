@@ -4,3 +4,4 @@ export * from "./tables/favourite";
 export * from "./tables/listing";
 export * from "./tables/post";
 export * from "./tables/review";
+export * from "./tables/waitlist";
