@@ -7,11 +7,11 @@ import { Button } from "@acme/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
 import { Tabs, TabsContent } from "@acme/ui/tabs";
 
-import ImageCarousel from "~/app/_components/common/image-carousel";
-import ShareButton from "~/app/_components/common/share-button";
-import UserAvatar from "~/app/_components/common/user-avatar";
-import FavouriteButton from "~/app/_components/listings/favourite-button";
 import { getSession } from "~/auth/server";
+import ImageCarousel from "~/components/common/image-carousel";
+import ShareButton from "~/components/common/share-button";
+import UserAvatar from "~/components/common/user-avatar";
+import FavouriteButton from "~/components/listings/favourite-button";
 import { api } from "~/trpc/server";
 
 export default async function ListingDetailPage({

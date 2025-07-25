@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 
-import AddListingForm from "~/app/_components/listings/add-listing-form";
-import Loader from "~/app/_components/loader";
 import { getSession } from "~/auth/server";
+import AddListingForm from "~/components/listings/add-listing-form";
+import Loader from "~/components/loader";
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 
 export default async function ListingsPage() {

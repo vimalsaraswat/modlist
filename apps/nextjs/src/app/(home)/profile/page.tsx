@@ -1,6 +1,6 @@
-import ProfileHeader from "~/app/_components/profile/profile-header";
+import ProfileHeader from "~/components/profile/profile-header";
+import ProfileTabs from "~/components/profile/profile-tabs";
 import { api, HydrateClient } from "~/trpc/server";
-import ProfileTabs from "../_components/profile/profile-tabs";
 
 export default async function ProfilePage() {
   const trpc = await api();

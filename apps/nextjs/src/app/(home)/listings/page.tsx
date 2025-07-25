@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 
-import { HydrateClient, prefetch, trpc } from "~/trpc/server";
-import Filters from "../_components/listings/filters";
+import Filters from "~/components/listings/filters";
 import {
   ListingGrid,
   ListingGridSkeleton,
-} from "../_components/listings/listing-grid";
-import Search from "../_components/listings/search";
+} from "~/components/listings/listing-grid";
+import Search from "~/components/listings/search";
+import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 
 export default async function ListingsPage({
   searchParams,

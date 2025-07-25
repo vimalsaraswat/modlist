@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { cn } from "@acme/ui";
-import { ThemeProvider, ThemeToggle } from "@acme/ui/theme";
+import { ThemeProvider } from "@acme/ui/theme";
 import { Toaster } from "@acme/ui/toast";
 
 import { TRPCReactProvider } from "~/trpc/react";
@@ -10,7 +10,6 @@ import { TRPCReactProvider } from "~/trpc/react";
 import "~/app/globals.css";
 
 import { env } from "~/env";
-import Header from "./_components/header";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -64,13 +63,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <TRPCReactProvider>
-            <Header />
             {props.children}
+            <Toaster richColors />
           </TRPCReactProvider>
-          <div className="fixed bottom-4 right-4">
-            <ThemeToggle />
-          </div>
-          <Toaster richColors />
         </ThemeProvider>
       </body>
     </html>

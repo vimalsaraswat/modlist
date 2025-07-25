@@ -12,7 +12,8 @@ export async function AuthShowcase() {
     return (
       <form>
         <Button
-          size="lg"
+          variant="ghost"
+          className="text-zinc-300 hover:text-white"
           formAction={async () => {
             "use server";
             const res = await auth.api.signInSocial({
@@ -27,7 +28,7 @@ export async function AuthShowcase() {
             redirect(res.url);
           }}
         >
-          Sign in with Google
+          Sign In
         </Button>
       </form>
     );
@@ -35,9 +36,18 @@ export async function AuthShowcase() {
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">
-      <p className="text-center text-2xl">
-        <span>Logged in as {session.user.name}</span>
-      </p>
+      <div className="flex flex-col items-center gap-2">
+        {session.user.image && (
+          <img
+            src={session.user.image}
+            alt={`${session.user.name}'s avatar`}
+            className="h-16 w-16 rounded-full"
+          />
+        )}
+        <p className="text-center text-2xl">
+          <span>{session.user.name}</span>
+        </p>
+      </div>
 
       <form>
         <Button
