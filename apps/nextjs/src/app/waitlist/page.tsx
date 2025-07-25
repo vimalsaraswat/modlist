@@ -222,7 +222,7 @@ export default function WaitlistPage() {
             tuners already waiting.
           </motion.p>
 
-          <motion.p
+          {/* <motion.p
             variants={fadeInUp}
             className="text-sm text-muted-foreground"
           >
@@ -231,7 +231,7 @@ export default function WaitlistPage() {
               Privacy Policy
             </Link>
             .
-          </motion.p>
+          </motion.p> */}
         </motion.div>
 
         {/* Scroll Indicator */}
