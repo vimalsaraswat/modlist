@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host");
 
+  console.log("hostname", hostname);
+
   if (hostname === "modlist.shop") {
     return NextResponse.redirect(new URL("/waitlist", request.url));
   }
