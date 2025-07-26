@@ -26,6 +26,10 @@ const config = {
         protocol: "https",
         hostname: "modlist.t3.storage.dev",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
 };
