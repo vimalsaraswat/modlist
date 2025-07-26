@@ -1,44 +1,22 @@
-import { headers } from "next/headers";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
-import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
+import { ThemeToggle } from "@acme/ui/theme";
 
-import { auth, getSession } from "~/auth/server";
+import { getSession } from "~/auth/server";
+import SignInButton from "./auth/sign-in-btn";
 import UserAvatar from "./common/user-avatar";
 
 export async function UserAccountNav() {
   const session = await getSession();
 
   if (!session) {
-    return (
-      <form>
-        <Button
-          formAction={async () => {
-            "use server";
-            const res = await auth.api.signInSocial({
-              body: {
-                provider: "google",
-                callbackURL: "/",
-              },
-            });
-            if (!res.url) {
-              throw new Error("No URL returned from signInSocial");
-            }
-            redirect(res.url);
-          }}
-        >
-          Sign In
-        </Button>
-      </form>
-    );
+    return <SignInButton />;
   }
 
   return (
@@ -79,22 +57,11 @@ export async function UserAccountNav() {
           <Link href="/dashboard/settings">Settings</Link>
         </DropdownMenuItem> */}
         {/* <DropdownMenuSeparator /> */}
-        <DropdownMenuItem className="cursor-pointer" asChild>
-          <form>
-            <button
-              className="w-full"
-              formAction={async () => {
-                "use server";
-                await auth.api.signOut({
-                  headers: await headers(),
-                });
-                redirect("/");
-              }}
-            >
-              Sign out
-            </button>
-          </form>
-        </DropdownMenuItem>
+        <div>
+          <div className="flex justify-end">
+            <ThemeToggle />
+          </div>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

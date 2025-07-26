@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { CarIcon, FilterIcon, MapIcon, TagIcon, X } from "lucide-react";
@@ -43,6 +43,7 @@ const Filters = () => {
   });
 
   const [isOpen, setIsOpen] = useState(false);
+  const skipEffectRef = useRef(false);
 
   // Fetch static options
   const { data: categories = [] } = useQuery(
@@ -74,12 +75,19 @@ const Filters = () => {
     });
   }, [filters, pathname, router]);
 
-  useEffect(updateFilters, [filters, updateFilters]);
-
   const clearFilters = () => {
+    skipEffectRef.current = true;
     setFilters(defaultFilters);
-    router.replace(pathname);
+    router.replace(pathname, { scroll: false });
   };
+
+  useEffect(() => {
+    if (skipEffectRef.current) {
+      skipEffectRef.current = false;
+      return;
+    }
+    updateFilters();
+  }, [filters, updateFilters]);
 
   const hasActiveFilters = useMemo(() => {
     return (
@@ -146,7 +154,12 @@ const Filters = () => {
       icon: <CarIcon className="h-4 w-4 text-zinc-400" />,
       label: "Make",
       value: String(filters.makeId),
-      onChange: (v: string) => setFilters((f) => ({ ...f, makeId: Number(v) })),
+      onChange: (v: string) =>
+        setFilters((f) => ({
+          ...f,
+          makeId: Number(v),
+          ...(filters.makeId === Number(v) ? {} : { modelId: -1 }),
+        })),
       options: [
         { label: "All Makes", value: "-1" },
         ...makes.map((m) => ({ label: m.name, value: String(m.id) })),

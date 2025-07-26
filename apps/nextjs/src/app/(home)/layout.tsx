@@ -1,6 +1,4 @@
-import { ThemeToggle } from "@acme/ui/theme";
-
-import "~/app/globals.css";
+// import { ThemeToggle } from "@acme/ui/theme";
 
 import Header from "~/components/header";
 
@@ -9,9 +7,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <>
       <Header />
       {props.children}
-      <div className="fixed bottom-4 right-4">
+      {/* <div className="fixed bottom-4 right-4">
         <ThemeToggle />
-      </div>
+      </div> */}
     </>
   );
 }

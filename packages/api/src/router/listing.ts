@@ -133,6 +133,7 @@ export const listingRouter = {
           .select({
             id: listing.id,
             user: {
+              id: user.id,
               name: user.name,
               image: user.image,
               createdAt: user.createdAt,

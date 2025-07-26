@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
 import { Tabs, TabsContent } from "@acme/ui/tabs";
 
 import { getSession } from "~/auth/server";
+import MessageSellerButton from "~/components/chats/message-seller-btn";
 import ImageCarousel from "~/components/common/image-carousel";
 import ShareButton from "~/components/common/share-button";
 import UserAvatar from "~/components/common/user-avatar";
@@ -240,10 +241,15 @@ export default async function ListingDetailPage({
                     </div>
                   </div>
                   {session?.user ? (
-                    <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/80">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Contact Seller
-                    </Button>
+                    listing.user?.id ? (
+                      listing.user.id !== session.user.id ? (
+                        <MessageSellerButton sellerId={listing.user.id} />
+                      ) : (
+                        <></>
+                      )
+                    ) : (
+                      <></>
+                    )
                   ) : (
                     <Button
                       disabled

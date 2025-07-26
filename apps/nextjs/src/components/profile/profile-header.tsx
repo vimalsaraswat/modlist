@@ -3,6 +3,8 @@ import { Clock, ShieldCheck, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@acme/ui/avatar";
 import { Badge } from "@acme/ui/badge";
 
+import SignOutButton from "../auth/sign-out-btn";
+
 export default function ProfileHeader({
   user,
 }: {
@@ -50,13 +52,16 @@ export default function ProfileHeader({
           </div>
         </div>
 
-        <div className="mt-4 flex gap-3 sm:mt-0">
-          <Badge variant="outline" className="px-3 py-1.5">
-            📦 {user.totalListings} Listings
-          </Badge>
-          <Badge variant="outline" className="px-3 py-1.5">
-            ⭐ {user.totalFavourites} Favourites
-          </Badge>
+        <div className="flex flex-col gap-2">
+          <div className="mt-4 flex gap-3 sm:mt-0">
+            <Badge variant="outline" className="px-3 py-1.5">
+              📦 {user.totalListings} Listings
+            </Badge>
+            <Badge variant="outline" className="px-3 py-1.5">
+              ⭐ {user.totalFavourites} Favourites
+            </Badge>
+          </div>
+          <SignOutButton />
         </div>
       </div>
     </div>

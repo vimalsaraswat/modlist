@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { List, Menu, Plus } from "lucide-react";
 
 import { Button } from "@acme/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@acme/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@acme/ui/sheet";
 
 const navItems = [
   {
@@ -57,6 +57,7 @@ const Navbar = () => {
           </Button>
         </SheetTrigger>
         <SheetContent side="right" className="w-80">
+          <SheetTitle />
           <div className="mt-6 flex flex-col gap-3">
             {navItems.map(({ label, href, Icon }) => {
               const isActive = pathname === href;

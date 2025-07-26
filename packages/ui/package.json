@@ -32,7 +32,9 @@
     "./avatar": "./src/avatar.tsx",
     "./carousel": "./src/carousel.tsx",
     "./command": "./src/command.tsx",
-    "./popover": "./src/popover.tsx"
+    "./popover": "./src/popover.tsx",
+    "./alert": "./src/alert.tsx",
+    "./alert-dialog": "./src/alert-dialog.tsx"
   },
   "license": "MIT",
   "scripts": {
@@ -44,6 +46,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
+    "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-icons": "^1.3.2",

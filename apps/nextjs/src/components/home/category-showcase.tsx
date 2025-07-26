@@ -82,9 +82,9 @@ export default function CategoryShowcase() {
                       {category.name}
                     </h3>
                     <p className="mt-1 text-zinc-400">{category.description}</p>
-                    <div className="mt-3 text-sm font-medium text-orange-400">
+                    {/* <div className="mt-3 text-sm font-medium text-orange-400">
                       {category.count} listings
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </CardContent>
