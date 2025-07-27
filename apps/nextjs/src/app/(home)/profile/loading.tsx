@@ -3,7 +3,7 @@ import { Skeleton } from "@acme/ui/skeleton";
 
 export default function ProfilePageLoading() {
   return (
-    <main className="min-h-dvh bg-background">
+    <main className="h-[calc(100dvh-4rem)] bg-background">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-12">
         {/* Profile Header Skeleton */}
         <Card className="border-border bg-card/60 p-6 backdrop-blur-sm">
