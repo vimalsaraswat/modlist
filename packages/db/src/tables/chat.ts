@@ -5,8 +5,8 @@ import { user } from "./auth";
 
 export const chat = pgTable("chat", (t) => ({
   id: t.uuid().notNull().primaryKey().defaultRandom(),
-  name: t.text(), // optional: for group chats
-  isGroup: t.boolean("is_group").default(false).notNull(),
+  name: t.text(), // optional: group chat title
+  isGroup: t.boolean().default(false).notNull(),
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })
@@ -22,8 +22,7 @@ export const chatParticipant = pgTable("chat_participant", (t) => ({
     .text()
     .notNull()
     .references(() => user.id),
-  role: t.text().default("member"), // e.g. admin, member
-
+  role: t.text().default("member"),
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })
@@ -36,11 +35,14 @@ export const chatMessage = pgTable("chat_message", (t) => ({
     .uuid()
     .notNull()
     .references(() => chat.id),
-  senderId: t
+  senderId: t.text().references(() => user.id),
+  type: t
     .text()
+    .default("text")
     .notNull()
-    .references(() => user.id),
+    .$type<"text" | "system" | "product" | "media" | "order">(),
   text: t.text(),
+  metadata: t.jsonb(),
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })

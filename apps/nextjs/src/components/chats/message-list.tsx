@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "~/trpc/react";
@@ -53,23 +55,37 @@ export default function MessageList({ chatId, userId }: Props) {
 
           {msgs.map((msg) => {
             const isMe = msg.senderId === userId;
+
             return (
               <div
                 key={msg.id}
-                className={`max-w-[70%] break-words rounded-lg px-4 py-2 text-sm ${
-                  isMe
-                    ? "ml-auto bg-primary text-primary-foreground"
-                    : "mr-auto bg-muted text-muted-foreground"
+                className={`max-w-[70%] break-words rounded-lg bg-secondary px-4 py-2 text-sm ${
+                  isMe ? "ml-auto" : "mr-auto text-muted-foreground"
                 }`}
               >
-                {msg.text}
-                <div className="mt-1 text-right text-xs text-muted-foreground">
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
-                </div>
+                {msg.type === "product" ? (
+                  <ProductMessage
+                    metadata={
+                      msg.metadata as {
+                        listingId: string;
+                        title: string;
+                        image: string;
+                        description: string;
+                      }
+                    }
+                  />
+                ) : (
+                  <>
+                    {msg.text}
+                    <div className="mt-1 text-right text-xs text-muted-foreground">
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}
@@ -96,4 +112,38 @@ function formatDateLabel(date: Date) {
     month: "short",
     year: "numeric",
   });
+}
+
+function ProductMessage({
+  metadata,
+}: {
+  metadata: {
+    listingId: string;
+    title: string;
+    image: string;
+    description: string;
+  };
+}) {
+  return (
+    <Link
+      href={`/listings/${metadata.listingId}`}
+      className="block rounded-md border border-border bg-background text-foreground transition hover:bg-accent/50"
+    >
+      <div className="flex items-center gap-4 p-3">
+        <Image
+          src={metadata.image}
+          alt={metadata.title}
+          width={64}
+          height={64}
+          className="h-16 w-16 rounded-md object-cover"
+        />
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold">{metadata.title}</h3>
+          <p className="line-clamp-2 text-xs text-muted-foreground">
+            {metadata.description}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
 }

@@ -3,10 +3,9 @@ import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuSeparator,
+  // DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
-import { ThemeToggle } from "@acme/ui/theme";
 
 import { getSession } from "~/auth/server";
 import SignInButton from "./auth/sign-in-btn";
@@ -49,7 +48,7 @@ export async function UserAccountNav() {
             )}
           </div>
         </Link>
-        <DropdownMenuSeparator />
+        {/* <DropdownMenuSeparator /> */}
         {/* <DropdownMenuItem asChild>
           <Link href="/dashboard">Dashboard</Link>
         </DropdownMenuItem>
@@ -57,11 +56,6 @@ export async function UserAccountNav() {
           <Link href="/dashboard/settings">Settings</Link>
         </DropdownMenuItem> */}
         {/* <DropdownMenuSeparator /> */}
-        <div>
-          <div className="flex justify-end">
-            <ThemeToggle />
-          </div>
-        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

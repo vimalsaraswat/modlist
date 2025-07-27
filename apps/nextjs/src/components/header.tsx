@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Settings } from "lucide-react";
 
 import { Badge } from "@acme/ui/badge";
+import { ThemeToggle } from "@acme/ui/theme";
 
 import Navbar from "./navbar";
 import { UserAccountNav } from "./user-account-nav";
@@ -45,7 +46,8 @@ const Header = () => {
           <div className="md:hidden" />
 
           {/* Right side - User account navigation */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <UserAccountNav />
           </div>
         </div>

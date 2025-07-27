@@ -74,14 +74,14 @@ export default function CategoryShowcase() {
             >
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400 transition-transform group-hover:scale-110">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent transition-transform group-hover:scale-110">
                     <category.icon size={24} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white">
-                      {category.name}
-                    </h3>
-                    <p className="mt-1 text-zinc-400">{category.description}</p>
+                    <h3 className="text-xl font-semibold">{category.name}</h3>
+                    <p className="mt-1 text-muted-foreground">
+                      {category.description}
+                    </p>
                     {/* <div className="mt-3 text-sm font-medium text-orange-400">
                       {category.count} listings
                     </div> */}

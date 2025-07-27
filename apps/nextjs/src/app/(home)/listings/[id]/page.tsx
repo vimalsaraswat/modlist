@@ -243,7 +243,15 @@ export default async function ListingDetailPage({
                   {session?.user ? (
                     listing.user?.id ? (
                       listing.user.id !== session.user.id ? (
-                        <MessageSellerButton sellerId={listing.user.id} />
+                        <MessageSellerButton
+                          sellerId={listing.user.id}
+                          listing={{
+                            id: listing.id,
+                            title: listing.title,
+                            image: listing.images[0] ?? "",
+                            description: listing.description,
+                          }}
+                        />
                       ) : (
                         <></>
                       )

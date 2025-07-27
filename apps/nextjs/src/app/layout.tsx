@@ -14,7 +14,7 @@ import { env } from "~/env";
 export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
-      ? "https://www.modlist.shop"
+      ? `https://${env.VERCEL_URL}`
       : "http://localhost:3000",
   ),
   title: "ModList",

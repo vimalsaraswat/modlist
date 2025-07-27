@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { SendIcon } from "lucide-react";
 
 import { Button } from "@acme/ui/button";
 import { Input } from "@acme/ui/input";
@@ -33,16 +34,20 @@ export default function SendMessageForm({ chatId }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+    <form onSubmit={handleSubmit} className="flex items-center gap-0">
       <Input
         placeholder="Type a message..."
         value={text}
         onChange={(e) => setText(e.target.value)}
         disabled={isPending}
-        className="flex-1"
+        className="flex-1 rounded-r-none"
       />
-      <Button type="submit" disabled={isPending || !text.trim()}>
-        Send
+      <Button
+        type="submit"
+        disabled={isPending || !text.trim()}
+        className="rounded-l-none"
+      >
+        <SendIcon />
       </Button>
     </form>
   );
