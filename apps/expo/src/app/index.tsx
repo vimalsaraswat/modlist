@@ -1,171 +1,120 @@
-import React, { useState } from "react";
-import { Button, Pressable, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, Stack } from "expo-router";
-import { LegendList } from "@legendapp/list";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { Pressable, View } from "react-native";
+import { Redirect } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 
-import type { RouterOutputs } from "~/utils/api";
-import { trpc } from "~/utils/api";
+import { Text } from "~/components/ui/text";
 import { authClient } from "~/utils/auth";
 
-function PostCard(props: {
-  post: RouterOutputs["post"]["all"][number];
-  onDelete: () => void;
-}) {
+// Keep the splash screen visible while we fetch resources
+void SplashScreen.preventAutoHideAsync();
+
+export default function App() {
+  const { data: session, isPending } = authClient.useSession();
+
+  // Effect to hide splash screen when session check is complete
+  useEffect(() => {
+    if (!isPending) {
+      void SplashScreen.hideAsync();
+    }
+  }, [isPending]);
+
+  if (isPending) {
+    return null;
+  }
+
+  // If user is authenticated, don't show the landing page
+  if (session) {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  // Show the landing page for unauthenticated users
   return (
-    <View className="flex flex-row rounded-lg bg-muted p-4">
-      <View className="flex-grow">
-        <Link
-          asChild
-          href={{
-            pathname: "/post/[id]",
-            params: { id: props.post.id },
-          }}
-        >
-          <Pressable className="">
-            <Text className="text-xl font-semibold text-primary">
-              {props.post.title}
+    <View style={{ flex: 1 }}>
+      <HomeScreen />
+    </View>
+  );
+}
+
+// components/HomeScreen.tsx (or wherever you keep this component)
+
+function HomeScreen() {
+  const handleSignIn = async () => {
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch (error) {
+      console.error("Sign in failed:", error);
+    }
+  };
+
+  return (
+    <View className="flex-1 bg-background">
+      {/* Hero Section */}
+
+      <View className="flex-1 items-center justify-center px-6">
+        <View className="mb-12 items-center">
+          <View className="mb-6 h-24 w-24 items-center justify-center rounded-2xl bg-primary">
+            <Text className="text-3xl font-bold text-primary-foreground">
+              M
             </Text>
-            <Text className="mt-2 text-foreground">{props.post.content}</Text>
-          </Pressable>
-        </Link>
-      </View>
-      <Pressable onPress={props.onDelete}>
-        <Text className="font-bold uppercase text-primary">Delete</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function CreatePost() {
-  const queryClient = useQueryClient();
-
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-
-  const { mutate, error } = useMutation(
-    trpc.post.create.mutationOptions({
-      async onSuccess() {
-        setTitle("");
-        setContent("");
-        await queryClient.invalidateQueries(trpc.post.all.queryFilter());
-      },
-    }),
-  );
-
-  return (
-    <View className="mt-4 flex gap-2">
-      <TextInput
-        className="items-center rounded-md border border-input bg-background px-3 text-lg leading-[1.25] text-foreground"
-        value={title}
-        onChangeText={setTitle}
-        placeholder="Title"
-      />
-      {error?.data?.zodError?.fieldErrors.title && (
-        <Text className="mb-2 text-destructive">
-          {error.data.zodError.fieldErrors.title}
-        </Text>
-      )}
-      <TextInput
-        className="items-center rounded-md border border-input bg-background px-3 text-lg leading-[1.25] text-foreground"
-        value={content}
-        onChangeText={setContent}
-        placeholder="Content"
-      />
-      {error?.data?.zodError?.fieldErrors.content && (
-        <Text className="mb-2 text-destructive">
-          {error.data.zodError.fieldErrors.content}
-        </Text>
-      )}
-      <Pressable
-        className="flex items-center rounded bg-primary p-2"
-        onPress={() => {
-          mutate({
-            title,
-            content,
-          });
-        }}
-      >
-        <Text className="text-foreground">Create</Text>
-      </Pressable>
-      {error?.data?.code === "UNAUTHORIZED" && (
-        <Text className="mt-2 text-destructive">
-          You need to be logged in to create a post
-        </Text>
-      )}
-    </View>
-  );
-}
-
-function MobileAuth() {
-  const { data: session } = authClient.useSession();
-
-  return (
-    <>
-      <Text className="pb-2 text-center text-xl font-semibold text-zinc-900">
-        {session?.user.name ? `Hello, ${session.user.name}` : "Not logged in"}
-      </Text>
-      <Button
-        onPress={() =>
-          session
-            ? authClient.signOut()
-            : authClient.signIn.social({
-                provider: "google",
-                callbackURL: "/",
-              })
-        }
-        title={session ? "Sign Out" : "Sign In With Google"}
-        color={"#5B65E9"}
-      />
-    </>
-  );
-}
-
-export default function Index() {
-  const queryClient = useQueryClient();
-
-  const postQuery = useQuery(trpc.post.all.queryOptions());
-
-  const deletePostMutation = useMutation(
-    trpc.post.delete.mutationOptions({
-      onSettled: () =>
-        queryClient.invalidateQueries(trpc.post.all.queryFilter()),
-    }),
-  );
-
-  return (
-    <SafeAreaView className="bg-background">
-      {/* Changes page title visible on the header */}
-      <Stack.Screen options={{ title: "Home Page" }} />
-      <View className="h-full w-full bg-background p-4">
-        <Text className="pb-2 text-center text-5xl font-bold text-foreground">
-          Create <Text className="text-primary">T3</Text> Turbo
-        </Text>
-
-        <MobileAuth />
-
-        <View className="py-2">
-          <Text className="font-semibold italic text-primary">
-            Press on a post
+          </View>
+          <Text className="mb-2 text-center text-4xl font-bold text-foreground">
+            Modlist
+          </Text>
+          <Text className="text-center text-lg text-muted-foreground">
+            Discover, buy & sell automotive modifications
           </Text>
         </View>
 
-        <LegendList
-          data={postQuery.data ?? []}
-          estimatedItemSize={20}
-          keyExtractor={(item) => item.id}
-          ItemSeparatorComponent={() => <View className="h-2" />}
-          renderItem={(p) => (
-            <PostCard
-              post={p.item}
-              onDelete={() => deletePostMutation.mutate(p.item.id)}
-            />
-          )}
-        />
+        {/* Features */}
+        <View className="mb-12 w-full">
+          <View className="mb-4 flex-row items-center px-4">
+            <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-accent">
+              <Text className="text-sm text-accent-foreground">🚗</Text>
+            </View>
+            <Text className="text-base text-foreground">
+              Browse thousands of car parts and modifications
+            </Text>
+          </View>
+          <View className="mb-4 flex-row items-center px-4">
+            <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-accent">
+              <Text className="text-sm text-accent-foreground">💬</Text>
+            </View>
+            <Text className="text-base text-foreground">
+              Chat directly with sellers and enthusiasts
+            </Text>
+          </View>
+          <View className="mb-4 flex-row items-center px-4">
+            <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-accent">
+              <Text className="text-sm text-accent-foreground">⭐</Text>
+            </View>
+            <Text className="text-base text-foreground">
+              Save your favorite parts and builds
+            </Text>
+          </View>
+        </View>
 
-        <CreatePost />
+        {/* Sign In Button */}
+        <Pressable
+          onPress={handleSignIn}
+          className="w-full flex-row items-center justify-center rounded-lg bg-primary p-4 active:opacity-90"
+        >
+          <View className="mr-3 h-6 w-6 items-center justify-center rounded bg-white">
+            <Text className="text-xs font-bold text-primary">G</Text>
+          </View>
+          <Text className="text-base font-semibold text-primary-foreground">
+            Continue with Google
+          </Text>
+        </Pressable>
+
+        <Text className="mt-6 px-4 text-center text-sm text-muted-foreground">
+          Join thousands of automotive enthusiasts sharing their builds and
+          finding parts
+        </Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
