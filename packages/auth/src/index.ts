@@ -20,6 +20,9 @@ export function initAuth(options: {
     }),
     baseURL: options.baseUrl,
     secret: options.secret,
+    advanced: {
+      useSecureCookies: true,
+    },
     plugins: [
       oAuthProxy({
         /**
@@ -37,7 +40,7 @@ export function initAuth(options: {
         redirectURI: `${options.productionUrl}/api/auth/callback/google`,
       },
     },
-    trustedOrigins: ["expo://"],
+    trustedOrigins: ["modlist://"],
   } satisfies BetterAuthOptions;
 
   return betterAuth(config);
