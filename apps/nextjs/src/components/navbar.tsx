@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { List, Menu, Plus } from "lucide-react";
+import { List, Menu, MessageSquare, Plus } from "lucide-react";
 
 import { Button } from "@acme/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@acme/ui/sheet";
@@ -18,6 +18,11 @@ const navItems = [
     label: "Sell Parts",
     href: "/listings/new",
     Icon: Plus,
+  },
+  {
+    label: "Forum",
+    href: "/forum",
+    Icon: MessageSquare,
   },
 ];
 
