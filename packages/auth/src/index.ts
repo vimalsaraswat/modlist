@@ -20,9 +20,9 @@ export function initAuth(options: {
     }),
     baseURL: options.baseUrl,
     secret: options.secret,
-    advanced: {
-      useSecureCookies: true,
-    },
+    // advanced: {
+    //   useSecureCookies: true,
+    // },
     plugins: [
       oAuthProxy({
         /**

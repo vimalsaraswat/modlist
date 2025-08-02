@@ -25,7 +25,7 @@ export const forumPost = pgTable("forum_post", (t) => ({
   slug: t.varchar({ length: 150 }).notNull().unique(),
   content: t.text().notNull(),
   userId: t
-    .uuid()
+    .text()
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   categoryId: t
@@ -53,7 +53,7 @@ export const forumReply = pgTable("forum_reply", (t) => ({
   id: t.uuid().primaryKey().defaultRandom(),
   content: t.text().notNull(),
   userId: t
-    .uuid()
+    .text()
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   postId: t
