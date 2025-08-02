@@ -8,7 +8,7 @@ const UserAvatar = ({
   imageUrl?: string | null;
   name: string;
 }) => (
-  <Avatar {...props} className="">
+  <Avatar {...props}>
     {imageUrl ? (
       <AvatarImage alt={name + "image"} src={imageUrl} />
     ) : (

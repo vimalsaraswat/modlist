@@ -5,7 +5,7 @@ import HowItWorks from "~/components/home/how-it-works";
 
 export default function CarPartsMarketplace() {
   return (
-    <div className="min-h-screen overflow-auto">
+    <div className="min-h-screen overflow-auto bg-background">
       <Hero />
       <CategoryShowcase />
       <HowItWorks />

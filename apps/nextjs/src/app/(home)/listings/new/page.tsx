@@ -16,7 +16,7 @@ export default async function ListingsPage() {
 
   return (
     <HydrateClient>
-      <main className="min-h-dvh bg-background">
+      <main>
         <div className="mx-auto max-w-4xl space-y-8 px-6 py-12">
           {session ? (
             <Suspense fallback={<Loader />}>
