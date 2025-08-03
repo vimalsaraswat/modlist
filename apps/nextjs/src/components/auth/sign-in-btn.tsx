@@ -13,7 +13,7 @@ export default function SignInButton() {
   const handleSignIn = async () => {
     try {
       await signIn(pathName);
-      toast.success("Signed in successfully!");
+      // toast.success("Signed in successfully!");
     } catch (err) {
       console.log("Error logging user in: ", err);
       toast.error("Failed to sign in.");
