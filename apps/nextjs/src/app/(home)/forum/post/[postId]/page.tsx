@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@acme/ui/avatar";
@@ -10,10 +11,28 @@ import { ReplyForm } from "~/components/forum/post/reply-form";
 import { formatTimeAgo } from "~/lib/utils";
 import { api } from "~/trpc/server";
 
+export const getPostData = cache(async (postId: string) => {
+  const trpc = await api();
+  const postData = await trpc.forum.postById({ postId });
+  return postData;
+});
+
 interface PostPageProps {
   params: Promise<{
     postId: string;
   }>;
+}
+
+export async function generateMetadata({ params }: PostPageProps) {
+  const postId = (await params).postId;
+  const postData = await getPostData(postId);
+
+  if (!postData) return {};
+
+  return {
+    title: `Modlist Forum | ${postData.post.title}`,
+    description: postData.post.content,
+  };
 }
 
 export default async function ForumPostPage({ params }: PostPageProps) {
@@ -21,8 +40,7 @@ export default async function ForumPostPage({ params }: PostPageProps) {
 
   const postId = (await params).postId;
 
-  const trpc = await api();
-  const postData = await trpc.forum.postById({ postId });
+  const postData = await getPostData(postId);
 
   if (!postData) return notFound();
 

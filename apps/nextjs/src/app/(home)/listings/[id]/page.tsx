@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { Calendar, MapPin, MessageCircle, Wrench } from "lucide-react";
 import { z } from "zod/v4";
@@ -15,18 +16,35 @@ import UserAvatar from "~/components/common/user-avatar";
 import FavouriteButton from "~/components/listings/favourite-button";
 import { api } from "~/trpc/server";
 
-export default async function ListingDetailPage({
-  params,
-}: {
+interface ListingPageProps {
   params: Promise<{ id: string }>;
-}) {
+}
+
+export const getListingData = cache(async (id: string) => {
+  const trpc = await api();
+  const listing = await trpc.listing.byId({ id });
+  return listing;
+});
+
+export async function generateMetadata({ params }: ListingPageProps) {
+  const { id } = await params;
+  const listing = await getListingData(id);
+
+  if (!listing) return {};
+
+  return {
+    title: `Modlist | ${listing.title}`,
+    description: listing.description,
+  };
+}
+
+export default async function ListingDetailPage({ params }: ListingPageProps) {
   const session = await getSession();
 
   const { id } = await params;
   if (!id || !z.uuid().safeParse(id).success) return notFound();
 
-  const trpc = await api();
-  const listing = await trpc.listing.byId({ id });
+  const listing = await getListingData(id);
   if (!listing) return notFound();
 
   return (

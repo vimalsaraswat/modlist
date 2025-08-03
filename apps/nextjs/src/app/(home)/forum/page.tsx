@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpen, Flame } from "lucide-react";
 
@@ -9,6 +10,20 @@ import UserAvatar from "~/components/common/user-avatar";
 import { StartDiscussion } from "~/components/forum/start-discussion";
 import { formatTimeAgo } from "~/lib/utils";
 import { api } from "~/trpc/server";
+
+export const metadata: Metadata = {
+  title: "Modlist Community Forum",
+  description:
+    "Join the Modlist community to explore builds, ask questions, share experiences, and connect with fellow modders worldwide.",
+  openGraph: {
+    title: "Modlist Community Forum",
+    description:
+      "Explore trending discussions and dive into categories ranging from builds to troubleshooting and reviews.",
+    url: "https://forum.modlist.shop/forum",
+    siteName: "Modlist Forum",
+    type: "website",
+  },
+};
 
 export default async function ForumHomePage() {
   const session = await getSession();
