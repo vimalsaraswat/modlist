@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@acme/ui/card";
 
+import { getSession } from "~/auth/server";
 import BackButton from "~/components/common/back-button";
 import UserAvatar from "~/components/common/user-avatar";
 import { StartDiscussion } from "~/components/forum/start-discussion";
@@ -23,10 +24,11 @@ interface CategoryPageProps {
 }
 
 export default async function ForumCategoryPage({ params }: CategoryPageProps) {
+  const session = await getSession();
+
   const slug = (await params).slug;
   const trpc = await api();
 
-  // const posts = [];
   const categories = await trpc.forum.categoryList();
   const category = categories.find((cat) => cat.slug === slug);
 
@@ -35,7 +37,7 @@ export default async function ForumCategoryPage({ params }: CategoryPageProps) {
 
   return (
     <main className="space-y-4">
-      <section className="flex justify-between gap-2 space-y-2 max-sm:flex-col">
+      <section className="flex justify-between gap-2 space-y-2 max-md:flex-col">
         <div>
           <div className="flex items-center gap-2">
             <BackButton fallbackUrl="/forum" />
@@ -46,7 +48,13 @@ export default async function ForumCategoryPage({ params }: CategoryPageProps) {
           </p>
         </div>
         <div>
-          <StartDiscussion categories={categories} category={category} />
+          {session?.user ? (
+            <StartDiscussion categories={categories} category={category} />
+          ) : (
+            <div className="rounded-md border p-4 text-center text-muted-foreground">
+              <p>Sign in to start a discussion.</p>
+            </div>
+          )}
         </div>
       </section>
 

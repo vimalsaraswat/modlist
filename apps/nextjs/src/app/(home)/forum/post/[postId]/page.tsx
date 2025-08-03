@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@acme/ui/avatar";
 import { Card, CardContent } from "@acme/ui/card";
 import { Separator } from "@acme/ui/separator";
 
+import { getSession } from "~/auth/server";
 import BackButton from "~/components/common/back-button";
 import { ReplyForm } from "~/components/forum/post/reply-form";
 import { formatTimeAgo } from "~/lib/utils";
@@ -16,6 +17,8 @@ interface PostPageProps {
 }
 
 export default async function ForumPostPage({ params }: PostPageProps) {
+  const session = await getSession();
+
   const postId = (await params).postId;
 
   const trpc = await api();
@@ -53,7 +56,13 @@ export default async function ForumPostPage({ params }: PostPageProps) {
 
       <div>
         <div className="mt-6">
-          <ReplyForm postId={postId} />
+          {session?.user ? (
+            <ReplyForm postId={postId} />
+          ) : (
+            <div className="rounded-md p-4 text-center text-muted-foreground">
+              <p>Please sign in to join the conversation.</p>
+            </div>
+          )}
         </div>
         <h2 className="mb-4 text-xl font-semibold">
           Replies ({replies.length})

@@ -4,19 +4,24 @@ import { BookOpen, Flame } from "lucide-react";
 import { Badge } from "@acme/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
 
+import { getSession } from "~/auth/server";
 import UserAvatar from "~/components/common/user-avatar";
 import { StartDiscussion } from "~/components/forum/start-discussion";
 import { formatTimeAgo } from "~/lib/utils";
 import { api } from "~/trpc/server";
 
 export default async function ForumHomePage() {
+  const session = await getSession();
   const trpc = await api();
-  const categories = await trpc.forum.categoryList();
-  const trending = await trpc.forum.trendingPosts();
+
+  const [categories, trending] = await Promise.all([
+    trpc.forum.categoryList(),
+    trpc.forum.trendingPosts(),
+  ]);
 
   return (
     <main className="space-y-12">
-      <section className="flex gap-2 space-y-2 max-sm:flex-col">
+      <section className="flex gap-2 space-y-2 max-md:flex-col">
         <div className="mt-4 flex flex-wrap gap-4">
           <h1 className="text-4xl font-bold tracking-tight">
             Welcome to the Modlist Community
@@ -27,7 +32,13 @@ export default async function ForumHomePage() {
           </p>
         </div>
         <div className="float-right">
-          <StartDiscussion categories={categories} />
+          {session?.user ? (
+            <StartDiscussion categories={categories} />
+          ) : (
+            <div className="rounded-md border p-4 text-center text-muted-foreground">
+              <p>Sign in to start a discussion.</p>
+            </div>
+          )}
         </div>
       </section>
 

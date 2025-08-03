@@ -1,3 +1,5 @@
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@acme/ui/avatar";
 
 const UserAvatar = ({

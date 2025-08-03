@@ -1,8 +1,15 @@
+import { notFound } from "next/navigation";
+
+import { getSession } from "~/auth/server";
 import ProfileHeader from "~/components/profile/profile-header";
 import ProfileTabs from "~/components/profile/profile-tabs";
 import { api, HydrateClient } from "~/trpc/server";
 
 export default async function ProfilePage() {
+  const session = await getSession();
+
+  if (!session?.user) notFound();
+
   const trpc = await api();
   const user = await trpc.auth.getUserData();
 
