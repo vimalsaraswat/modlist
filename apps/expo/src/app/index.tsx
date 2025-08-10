@@ -1,9 +1,8 @@
 import { useEffect } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
-import { Text } from "~/components/ui/text";
 import { authClient } from "~/utils/auth";
 
 // Keep the splash screen visible while we fetch resources
@@ -23,7 +22,7 @@ export default function App() {
     return null;
   }
 
-  // If user is authenticated, don't show the landing page
+  // // If user is authenticated, don't show the landing page
   if (session) {
     return <Redirect href="/(tabs)" />;
   }

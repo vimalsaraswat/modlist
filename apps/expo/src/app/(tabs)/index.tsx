@@ -1,16 +1,16 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Image,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Pressable } from "@rn-primitives/slot";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { trpc } from "~/utils/api";
 
@@ -35,25 +35,26 @@ interface ListingItem {
 const HomeScreen = () => {
   const [isRefetching, setIsRefetching] = useState(false);
   const [offset, setOffset] = useState(0);
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
 
   const LIMIT = 20;
 
   const {
-    data: listings,
-    isLoading,
+    data,
+    isPending,
     error,
     refetch: refetchListings,
-    isFetchingNextPage,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery(
+    // isFetchingNextPage,
+    // fetchNextPage,
+    // hasNextPage,
+  } = useQuery(
     trpc.listing.list.queryOptions({
       limit: LIMIT,
-      offset: offset,
+      // offset: offset,
     }),
-    {}
   );
+
+  const listings = data;
 
   const handlePullToRefresh = async () => {
     setIsRefetching(true);
@@ -62,15 +63,15 @@ const HomeScreen = () => {
     setIsRefetching(false);
   };
 
-  const loadMore = useCallback(() => {
-    if (!isFetchingNextPage && hasNextPage) {
-      const newOffset = offset + LIMIT;
-      setOffset(newOffset);
-      fetchNextPage();
-    }
-  }, [offset, isFetchingNextPage, hasNextPage, fetchNextPage]);
+  // const loadMore = useCallback(() => {
+  //   if (!isFetchingNextPage && hasNextPage) {
+  //     const newOffset = offset + LIMIT;
+  //     setOffset(newOffset);
+  //     fetchNextPage();
+  //   }
+  // }, [offset, isFetchingNextPage, hasNextPage, fetchNextPage]);
 
-  if (isLoading && !isRefetching) {
+  if (isPending && !isRefetching) {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-1 items-center justify-center">
@@ -155,15 +156,15 @@ const HomeScreen = () => {
               tintColor={"#1DA1F2"}
             />
           }
-          onEndReached={loadMore}
+          // onEndReached={loadMore}
           onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View className="py-4">
-                <ActivityIndicator size="small" color="#1DA1F2" />
-              </View>
-            ) : null
-          }
+          // ListFooterComponent={
+          //   isFetchingNextPage ? (
+          //     <View className="py-4">
+          //       <ActivityIndicator size="small" color="#1DA1F2" />
+          //     </View>
+          //   ) : null
+          // }
         />
         {/*<FlatList
           data={listings}
@@ -234,7 +235,7 @@ const ListingCard = ({ item }: { item: ListingItem }) => {
 
           <View className="mb-4 flex-row items-center justify-between">
             <Text className="text-lg font-bold text-accent">
-              ${item.price?.toLocaleString() || "N/A"}
+              ${item.price.toLocaleString() || "N/A"}
             </Text>
             {item.city && (
               <View className="flex-row items-center">

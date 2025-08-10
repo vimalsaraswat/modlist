@@ -8,13 +8,7 @@ import type { AppRouter } from "@acme/api";
 import { authClient } from "./auth";
 import { getBaseUrl } from "./base-url";
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // ...
-    },
-  },
-});
+export const queryClient = new QueryClient();
 
 /**
  * A set of typesafe hooks for consuming your API.

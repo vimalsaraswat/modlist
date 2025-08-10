@@ -3,48 +3,48 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  --background: 24 100% 98.0392%;
+  --foreground: 346.6667 7.9646% 22.1569%;
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 346.6667 7.9646% 22.1569%;
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 327 66% 69%;
-  --primary-foreground: 337 65.5% 17.1%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 72.22% 50.59%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5% 64.9%;
-  --radius: 0.5rem;
+  --popover-foreground: 346.6667 7.9646% 22.1569%;
+  --primary: 11.625 100% 68.6275%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 8.5714 100% 95.8824%;
+  --secondary-foreground: 9.913 47.3251% 47.6471%;
+  --muted: 15 100% 96.0784%;
+  --muted-foreground: 25 5.2632% 44.7059%;
+  --accent: 26.1069 98.4962% 73.9216%;
+  --accent-foreground: 346.6667 7.9646% 22.1569%;
+  --destructive: 355.4913 77.5785% 56.2745%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 14.6341 100% 91.9608%;
+  --input: 14.6341 100% 91.9608%;
+  --ring: 11.625 100% 68.6275%;
+  --radius: 0.625rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 327 66% 69%;
-    --primary-foreground: 337 65.5% 17.1%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --background: 336 13.5135% 14.5098%;
+    --foreground: 21.4286 35% 92.1569%;
+    --card: 324 9.6154% 20.3922%;
+    --card-foreground: 21.4286 35% 92.1569%;
+    --popover: 324 9.6154% 20.3922%;
+    --popover-foreground: 21.4286 35% 92.1569%;
+    --primary: 11.625 100% 68.6275%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 325 9.375% 25.098%;
+    --secondary-foreground: 21.4286 35% 92.1569%;
+    --muted: 324 9.6154% 20.3922%;
+    --muted-foreground: 22.2222 25.2336% 79.0196%;
+    --accent: 26.1069 98.4962% 73.9216%;
+    --accent-foreground: 336 13.5135% 14.5098%;
+    --destructive: 355.4913 77.5785% 56.2745%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 325 9.375% 25.098%;
+    --input: 325 9.375% 25.098%;
+    --ring: 11.625 100% 68.6275%;
   }
 }
