@@ -1,3 +1,4 @@
+import Toast from "react-native-toast-message";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
@@ -7,20 +8,17 @@ import "../styles.css";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 
-// This is the main layout of the app
-// It wraps your pages with the providers they need
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      {/*
-          The Stack component displays the current page.
-          It also allows you to configure your screens
-        */}
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-      <StatusBar />
-    </QueryClientProvider>
+    <>
+      <QueryClientProvider client={queryClient}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+        <StatusBar />
+      </QueryClientProvider>
+      <Toast />
+    </>
   );
 }

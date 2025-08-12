@@ -1,17 +1,15 @@
-import { useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
 import { authClient } from "~/utils/auth";
 
-// Keep the splash screen visible while we fetch resources
 void SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const { data: session, isPending } = authClient.useSession();
 
-  // Effect to hide splash screen when session check is complete
   useEffect(() => {
     if (!isPending) {
       void SplashScreen.hideAsync();
@@ -22,12 +20,10 @@ export default function App() {
     return null;
   }
 
-  // // If user is authenticated, don't show the landing page
   if (session) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(tabs)/listings" />;
   }
 
-  // Show the landing page for unauthenticated users
   return (
     <View style={{ flex: 1 }}>
       <HomeScreen />
@@ -35,17 +31,20 @@ export default function App() {
   );
 }
 
-// components/HomeScreen.tsx (or wherever you keep this component)
-
 function HomeScreen() {
+  const [signInLoading, setSignInLoading] = useState(false);
+
   const handleSignIn = async () => {
     try {
+      setSignInLoading(true);
       await authClient.signIn.social({
         provider: "google",
         callbackURL: "/",
       });
     } catch (error) {
       console.error("Sign in failed:", error);
+    } finally {
+      setSignInLoading(false);
     }
   };
 
@@ -99,14 +98,26 @@ function HomeScreen() {
         {/* Sign In Button */}
         <Pressable
           onPress={handleSignIn}
-          className="w-full flex-row items-center justify-center rounded-lg bg-primary p-4 active:opacity-90"
+          disabled={signInLoading}
+          className={`w-full flex-row items-center justify-center rounded-lg bg-primary p-4 ${signInLoading ? "opacity-70" : "active:opacity-90"}`}
         >
-          <View className="mr-3 h-6 w-6 items-center justify-center rounded bg-white">
-            <Text className="text-xs font-bold text-primary">G</Text>
-          </View>
-          <Text className="text-base font-semibold text-primary-foreground">
-            Continue with Google
-          </Text>
+          {signInLoading ? (
+            <>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text className="ml-2 text-base font-semibold text-primary-foreground">
+                Signing In...
+              </Text>
+            </>
+          ) : (
+            <>
+              <View className="mr-3 h-6 w-6 items-center justify-center rounded bg-white">
+                <Text className="text-xs font-bold text-primary">G</Text>
+              </View>
+              <Text className="text-base font-semibold text-primary-foreground">
+                Continue with Google
+              </Text>
+            </>
+          )}
         </Pressable>
 
         <Text className="mt-6 px-4 text-center text-sm text-muted-foreground">

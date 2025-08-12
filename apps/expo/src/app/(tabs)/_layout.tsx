@@ -13,6 +13,7 @@ const TabsLayout = () => {
 
   return (
     <Tabs
+      initialRouteName="listings"
       screenOptions={{
         tabBarActiveTintColor: "#1DA1F2",
         tabBarInactiveTintColor: "#657786",
@@ -26,10 +27,19 @@ const TabsLayout = () => {
         headerShown: false,
       }}
     >
-      <Tabs.Screen
+      {/*<Tabs.Screen
         name="index"
         options={{
           title: "",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="home" size={size} color={color} />
+          ),
+        }}
+      />*/}
+      <Tabs.Screen
+        name="listings"
+        options={{
+          title: "Listings",
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),
