@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 
 import { Skeleton } from "@acme/ui/skeleton";
 
@@ -11,71 +12,122 @@ import ListingCard from "./listing-card";
 export function ListingGrid() {
   const trpc = useTRPC();
   const searchParams = useSearchParams();
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const searchQuery = searchParams.get("query");
-  const category = searchParams.get("category");
-  const make = searchParams.get("make");
-  const model = searchParams.get("model");
-  const city = searchParams.get("city");
+  const parsedParams = useMemo(() => {
+    const parseNumericParam = (param: string | null) =>
+      param && !isNaN(Number(param)) && Number(param) >= 0
+        ? Number(param)
+        : undefined;
 
-  const categoryId =
-    category && !isNaN(Number(category)) && Number(category) >= 0
-      ? Number(category)
-      : undefined;
-  const makeId =
-    make && !isNaN(Number(make)) && Number(make) >= 0
-      ? Number(make)
-      : undefined;
-  const modelId =
-    model && !isNaN(Number(model)) && Number(model) >= 0
-      ? Number(model)
-      : undefined;
-  const cityId =
-    city && !isNaN(Number(city)) && Number(city) >= 0
-      ? Number(city)
-      : undefined;
+    return {
+      categoryId: parseNumericParam(searchParams.get("category")),
+      makeId: parseNumericParam(searchParams.get("make")),
+      modelId: parseNumericParam(searchParams.get("model")),
+      cityId: parseNumericParam(searchParams.get("city")),
+      keyword: (() => {
+        const q = searchParams.get("query");
+        return typeof q === "string" && q.trim() !== "" ? q : undefined;
+      })(),
+    };
+  }, [searchParams]);
 
-  const { data: listings = [] } = useSuspenseQuery(
-    trpc.listing.list.queryOptions({
-      limit: 20,
-      offset: 0,
-      categoryId,
-      makeId,
-      modelId,
-      cityId,
-      keyword:
-        typeof searchQuery === "string" && searchQuery !== ""
-          ? searchQuery
-          : undefined,
-    }),
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isInitialLoading,
+    isError,
+  } = useSuspenseInfiniteQuery(
+    trpc.listing.list.infiniteQueryOptions(
+      {
+        limit: 20,
+        ...parsedParams,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    ),
   );
+
+  const listings = data.pages.flatMap((page) => page.items);
+
+  // Infinite Scroll Handler
+  useEffect(() => {
+    const loader = loaderRef.current;
+    if (!loader || !hasNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting && !isFetchingNextPage) {
+          console.log("fetchNextPage");
+          void fetchNextPage();
+        }
+      },
+      {
+        root: null,
+        rootMargin: "600px", // prefetch before appearing
+        threshold: 0,
+      },
+    );
+
+    observer.observe(loader);
+
+    return () => {
+      observer.unobserve(loader);
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  if (isInitialLoading) {
+    return <InitialSkeleton />;
+  }
+
+  if (isError) {
+    return <ErrorState />;
+  }
 
   if (listings.length === 0) {
     return <EmptyState />;
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-3">
-      {listings.map((item) => (
-        <ListingCard
-          key={item.id}
-          id={item.id}
-          city={item.city}
-          price={item.price}
-          title={item.title}
-          imageUrl={item.imageUrl}
-          category={item.category}
-          createdAt={item.createdAt}
-          description={item.description}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-3">
+        {listings.map((item, i) => (
+          <ListingCard
+            key={i}
+            id={item.id}
+            city={item.city}
+            price={item.price}
+            title={item.title}
+            imageUrl={item.imageUrl}
+            category={item.category}
+            createdAt={item.createdAt}
+            description={item.description}
+          />
+        ))}
+      </div>
+
+      {hasNextPage && (
+        <div
+          ref={loaderRef}
+          className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-3"
+          aria-live="polite"
+        >
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 animate-pulse" />
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
-export function ListingGridSkeleton() {
+export function InitialSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 2xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <Skeleton key={i} className="h-64 animate-pulse" />
       ))}
@@ -83,10 +135,22 @@ export function ListingGridSkeleton() {
   );
 }
 
-export function EmptyState() {
+function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center p-16 text-gray-500">
       <p className="text-2xl font-bold">No listings found.</p>
+      <p className="mt-2 text-sm">
+        Try adjusting your filters or search query.
+      </p>
+    </div>
+  );
+}
+
+function ErrorState() {
+  return (
+    <div className="flex flex-col items-center justify-center p-16 text-red-500">
+      <p className="text-2xl font-bold">Something went wrong.</p>
+      <p className="mt-2 text-sm">Please try refreshing the page.</p>
     </div>
   );
 }

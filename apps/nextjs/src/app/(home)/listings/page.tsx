@@ -2,8 +2,8 @@ import { Suspense } from "react";
 
 import Filters from "~/components/listings/filters";
 import {
+  InitialSkeleton,
   ListingGrid,
-  ListingGridSkeleton,
 } from "~/components/listings/listing-grid";
 import Search from "~/components/listings/search";
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
@@ -24,16 +24,15 @@ export default async function ListingsPage({
   const makeId = make && !isNaN(Number(make)) ? Number(make) : undefined;
   const cityId = city && !isNaN(Number(city)) ? Number(city) : undefined;
 
-  prefetch(
-    trpc.listing.list.queryOptions({
-      limit: 20,
-      offset: 0,
-      categoryId,
-      makeId,
-      cityId,
-      keyword: query,
-    }),
-  );
+  // prefetch(
+  //   trpc.listing.list.infiniteQueryOptions({
+  //     limit: 20,
+  //     categoryId,
+  //     makeId,
+  //     cityId,
+  //     keyword: query,
+  //   }),
+  // );
 
   return (
     <HydrateClient>
@@ -49,7 +48,7 @@ export default async function ListingsPage({
         </div>
         {/* Listings Grid */}
         <div className="flex-1">
-          <Suspense fallback={<ListingGridSkeleton />}>
+          <Suspense fallback={<InitialSkeleton />}>
             <ListingGrid />
           </Suspense>
         </div>
