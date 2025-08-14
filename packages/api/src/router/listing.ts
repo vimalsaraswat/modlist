@@ -49,7 +49,7 @@ export const listingRouter = {
         priceMin: z.number().optional(),
         priceMax: z.number().optional(),
         limit: z.number().min(1).max(100).default(20),
-        offset: z.number().min(0).default(0),
+        cursor: z.number().min(0).default(0),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -62,7 +62,7 @@ export const listingRouter = {
         priceMin,
         priceMax,
         limit,
-        offset,
+        cursor,
       } = input;
 
       const filters = [];
@@ -77,6 +77,7 @@ export const listingRouter = {
           ),
         );
       }
+
       if (categoryId) filters.push(eq(listing.categoryId, categoryId));
       if (makeId) filters.push(eq(listing.makeId, makeId));
       if (modelId) filters.push(eq(listing.modelId, modelId));
@@ -84,7 +85,7 @@ export const listingRouter = {
       if (priceMin !== undefined) filters.push(gte(listing.price, priceMin));
       if (priceMax !== undefined) filters.push(lte(listing.price, priceMax));
 
-      return ctx.db
+      const items = await ctx.db
         .select({
           id: listing.id,
           userId: listing.userId,
@@ -107,16 +108,27 @@ export const listingRouter = {
           listingImage,
           and(
             eq(listingImage.listingId, listing.id),
-            eq(listingImage.position, 0), // only main image
+            eq(listingImage.position, 0),
           ),
         )
         .leftJoin(cities, eq(cities.id, listing.cityId))
         .leftJoin(category, eq(category.id, listing.categoryId))
         .where(filters.length ? and(...filters) : undefined)
         .orderBy(desc(listing.createdAt))
-        .limit(limit)
-        .offset(offset)
+        .limit(limit + 1)
+        .offset(cursor)
         .execute();
+
+      let nextCursor: number | undefined = undefined;
+      if (items.length > limit) {
+        items.pop(); // remove the extra one
+        nextCursor = cursor + limit;
+      }
+
+      return {
+        items,
+        nextCursor,
+      };
     }),
 
   /**
