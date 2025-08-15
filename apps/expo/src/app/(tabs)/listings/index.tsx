@@ -1,42 +1,39 @@
-import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  RefreshControl,
-  Text,
-  View,
-} from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
+import FilterModal from "~/components/listings/home/filter-modal";
+import HeaderSection from "~/components/listings/home/header-section";
+import ListingsSection from "~/components/listings/home/listings-section";
 import { trpc } from "~/utils/api";
-
-interface ListingItem {
-  id: string;
-  userId: string;
-  title: string;
-  description: string;
-  price: number;
-  makeId: number;
-  modelId: number;
-  category: string | null;
-  city: string | null;
-  latitude: string | null;
-  longitude: string | null;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-  imageUrl: string | null;
-}
 
 const LIMIT = 20;
 
 const HomeScreen = () => {
+  const [searchText, setSearchText] = useState("");
+
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [selectedMakeId, setSelectedMakeId] = useState<number | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  const [selectedCityIds, setSelectedCityIds] = useState<number[]>([]); // Multi-select
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [isRefetching, setIsRefetching] = useState(false);
+
   const queryClient = useQueryClient();
+
+  const { data: categories = [] } = useQuery(
+    trpc.listing.categoryList.queryOptions(),
+  );
+  const { data: makes = [] } = useQuery(trpc.listing.makeList.queryOptions());
+  const { data: cities = [] } = useQuery(trpc.listing.cityList.queryOptions());
 
   const {
     data,
@@ -48,200 +45,142 @@ const HomeScreen = () => {
     isFetchingNextPage,
   } = useInfiniteQuery(
     trpc.listing.list.infiniteQueryOptions(
-      { limit: LIMIT },
+      {
+        limit: LIMIT,
+        keyword: searchText.length > 0 ? searchText : undefined,
+
+        categoryId:
+          selectedCategoryIds.length > 0 ? selectedCategoryIds[0] : undefined,
+        makeId: selectedMakeId ?? undefined,
+        modelId: selectedModelId ?? undefined,
+        cityId: selectedCityIds.length > 0 ? selectedCityIds[0] : undefined,
+
+        priceMin: minPrice ? Number(minPrice) : undefined,
+        priceMax: maxPrice ? Number(maxPrice) : undefined,
+      },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
       },
     ),
   );
 
-  // Flatten pages into a single array
-  const listings: ListingItem[] =
-    data?.pages.flatMap((page) => page.items) ?? [];
+  const listings = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data],
+  );
 
-  const handlePullToRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefetching(true);
     await refetch();
     await queryClient.invalidateQueries(trpc.listing.byId.queryFilter());
     setIsRefetching(false);
-  };
+  }, [refetch, queryClient]);
 
-  const loadMore = useCallback(async () => {
+  const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
-      await fetchNextPage();
+      void fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (isPending && !isRefetching) {
-    return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#1DA1F2" />
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const clearFilters = useCallback(() => {
+    setSearchText("");
+    setSelectedCategoryIds([]);
+    setSelectedMakeId(null);
+    setSelectedModelId(null);
+    setSelectedCityIds([]);
+    setMinPrice("");
+    setMaxPrice("");
+  }, []);
 
-  if (error) {
-    return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="mb-4 text-2xl font-bold text-foreground">
-            Error loading listings
-          </Text>
-          <Text className="mb-6 text-center text-muted-foreground">
-            Something went wrong. Please try again.
-          </Text>
-          <Pressable
-            onPress={handlePullToRefresh}
-            className="rounded-lg bg-primary px-6 py-3"
-          >
-            <Text className="font-semibold text-primary-foreground">Retry</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const applyFilters = useCallback(
+    (newFilters: {
+      categoryIds: number[];
+      makeId: number | null;
+      modelId: number | null;
+      cityIds: number[];
+      minPrice: string;
+      maxPrice: string;
+    }) => {
+      setSelectedCategoryIds(newFilters.categoryIds);
+      setSelectedMakeId(newFilters.makeId);
+      setSelectedModelId(newFilters.modelId);
+      setSelectedCityIds(newFilters.cityIds);
+      setMinPrice(newFilters.minPrice);
+      setMaxPrice(newFilters.maxPrice);
+      setShowFilterModal(false);
+    },
+    [],
+  );
 
-  if (listings.length === 0) {
-    return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="mb-4 text-2xl font-bold text-foreground">
-            No listings found
-          </Text>
-          <Text className="mb-6 text-center text-muted-foreground">
-            Be the first to list your car parts!
-          </Text>
-          <Pressable
-            onPress={handlePullToRefresh}
-            className="rounded-lg bg-primary px-6 py-3"
-          >
-            <Text className="font-semibold text-primary-foreground">
-              Refresh
-            </Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      void refetch();
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [
+    searchText,
+    minPrice,
+    maxPrice,
+    selectedCategoryIds,
+    selectedMakeId,
+    selectedModelId,
+    selectedCityIds,
+    refetch,
+  ]);
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
-        <Text className="text-xl font-bold text-foreground">Browse Parts</Text>
-      </View>
-
-      <FlatList
-        data={listings}
-        keyExtractor={(item, index) => `${item.id.toString()}-${index}`}
-        renderItem={({ item }) => <ListingCard item={item} />}
-        contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={handlePullToRefresh}
-            tintColor={"#1DA1F2"}
-          />
+      <HeaderSection
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        onFilterPress={() => setShowFilterModal(true)}
+        selectedCategories={selectedCategoryIds}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        onClearFilters={clearFilters}
+        categories={categories}
+        onRemoveCategory={(id) =>
+          setSelectedCategoryIds((prev) => prev.filter((catId) => catId !== id))
         }
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          isFetchingNextPage ? (
-            <View className="py-4">
-              <ActivityIndicator size="small" color="#1DA1F2" />
-            </View>
-          ) : null
-        }
+        onRemovePriceFilter={() => {
+          setMinPrice("");
+          setMaxPrice("");
+        }}
       />
+
+      <ListingsSection
+        listings={listings}
+        isLoading={isPending && !isRefetching}
+        isError={!!error}
+        isEmpty={listings.length === 0 && !isPending}
+        isRefetching={isRefetching}
+        isFetchingNextPage={isFetchingNextPage}
+        onRefresh={handleRefresh}
+        onLoadMore={loadMore}
+        onRetry={handleRefresh}
+      />
+
+      <Modal
+        visible={showFilterModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <FilterModal
+          categories={categories}
+          makes={makes}
+          cities={cities}
+          selectedCategoryIds={selectedCategoryIds}
+          selectedMakeId={selectedMakeId}
+          selectedModelId={selectedModelId}
+          selectedCityIds={selectedCityIds}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onClose={() => setShowFilterModal(false)}
+          onApply={applyFilters}
+        />
+      </Modal>
     </SafeAreaView>
-  );
-};
-const ListingCard = ({ item }: { item: ListingItem }) => {
-  const router = useRouter();
-
-  // Format date
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  return (
-    <Pressable
-      onPress={() =>
-        router.push({
-          pathname: "/(tabs)/listings/[id]",
-          params: { id: item.id },
-        })
-      }
-      className="mb-4 overflow-hidden rounded-lg border border-border bg-card active:opacity-90"
-    >
-      <View>
-        {/* Image section */}
-        <View className="relative">
-          {item.imageUrl ? (
-            <Image
-              source={{ uri: item.imageUrl }}
-              className="h-48 w-full"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="h-48 w-full items-center justify-center bg-secondary">
-              <Text className="text-secondary-foreground">No Image</Text>
-            </View>
-          )}
-          {item.category && (
-            <View className="absolute left-2 top-2 rounded-full bg-secondary px-3 py-1">
-              <Text className="text-xs font-medium text-secondary-foreground">
-                {item.category}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Content section */}
-        <View className="p-4">
-          <Text className="mb-2 font-bold text-foreground" numberOfLines={2}>
-            {item.title}
-          </Text>
-
-          {item.description && (
-            <Text
-              className="mb-4 text-sm text-muted-foreground"
-              numberOfLines={2}
-            >
-              {item.description}
-            </Text>
-          )}
-
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-lg font-bold text-accent">
-              ${item.price.toLocaleString() || "N/A"}
-            </Text>
-            {item.city && (
-              <View className="flex-row items-center">
-                {/*<MapPin size={14} color="#9CA3AF" />*/}
-                <Text className="ml-1 text-sm text-muted-foreground">
-                  {item.city}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View className="mb-4 flex-row items-center justify-between">
-            <View className="flex-row items-center">
-              {/*<Clock size={14} color="#9CA3AF" />*/}
-              <Text className="ml-1 text-sm text-muted-foreground">
-                {formatDate(item.createdAt)}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    </Pressable>
   );
 };
 
