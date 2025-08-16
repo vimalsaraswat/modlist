@@ -73,13 +73,26 @@ export const forumRouter = {
         id: forumPost.id,
         title: forumPost.title,
         content: forumPost.content,
-        author: { name: user.name, image: user.image },
+        author: {
+          name: user.name,
+          image: user.image,
+        },
         createdAt: forumPost.createdAt,
+        replyCount: sql<number>`COUNT(${forumReply.id})`.as("replyCount"),
       })
       .from(forumPost)
       .leftJoin(user, eq(user.id, forumPost.userId))
+      .leftJoin(forumReply, eq(forumReply.postId, forumPost.id))
+      .groupBy(
+        forumPost.id,
+        forumPost.title,
+        forumPost.content,
+        forumPost.createdAt,
+        user.name,
+        user.image,
+      )
       .orderBy(
-        desc(sql`${forumPost.replyCount} + ${forumPost.viewCount}`),
+        desc(sql`COUNT(${forumReply.id}) + ${forumPost.viewCount}`),
         desc(forumPost.updatedAt),
       )
       .limit(6),
@@ -102,6 +115,7 @@ export const forumRouter = {
           id: forumPost.id,
           title: forumPost.title,
           content: forumPost.content,
+          // viewCount: forumPost.viewCount,
           createdAt: forumPost.createdAt,
           author: {
             id: user.id,
@@ -134,6 +148,12 @@ export const forumRouter = {
         .where(eq(forumReply.postId, input.postId))
         .orderBy(desc(forumReply.createdAt))
         .execute();
+
+      // await ctx.db
+      //   .update(forumPost)
+      //   .set({ viewCount: post.viewCount + 1 })
+      //   .where(eq(forumPost.id, post.id))
+      //   .execute();
 
       return { post, replies };
     }),

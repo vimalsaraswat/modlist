@@ -20,6 +20,7 @@ const TabsLayout = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.foreground,
         tabBarStyle: {
+          borderColor: colors.border,
           backgroundColor: colors.background,
           height: 58 + insets.bottom,
           paddingTop: 6,
@@ -54,13 +55,44 @@ const TabsLayout = () => {
           ),
         }}
       />
+
       <Tabs.Screen
-        name="favourites"
+        name="forum"
         options={{
-          title: "Favourites",
+          title: "Forum",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "heart" : "heart-outline"}
+              name={focused ? "people" : "people-outline"}
+              size={size}
+              color={color}
+              style={{ minWidth: size, minHeight: size, textAlign: "center" }}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="chats"
+        options={{
+          title: "Chats",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
+              size={size}
+              color={color}
+              style={{ minWidth: size, minHeight: size, textAlign: "center" }}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
               size={size}
               color={color}
               style={{ minWidth: size, minHeight: size, textAlign: "center" }}
@@ -71,4 +103,5 @@ const TabsLayout = () => {
     </Tabs>
   );
 };
+
 export default TabsLayout;
