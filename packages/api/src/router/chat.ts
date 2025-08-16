@@ -1,10 +1,27 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, max, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { chat, chatMessage, chatParticipant, user } from "@acme/db/schema";
 
 import { protectedProcedure } from "../trpc";
+
+interface ChatRow {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  participantUser: {
+    name: string | null;
+    email: string | null;
+    image: string | null;
+  };
+  lastMessage: {
+    id: string;
+    text: string | null;
+    type: string;
+    createdAt: Date;
+  } | null;
+}
 
 export const chatRouter = {
   create: protectedProcedure
@@ -48,15 +65,27 @@ export const chatRouter = {
 
   myChats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
+
     const chatIds = (
       await ctx.db
         .select({ chatId: chatParticipant.chatId })
         .from(chatParticipant)
         .where(eq(chatParticipant.userId, userId))
     ).map((cp) => cp.chatId);
+
     if (chatIds.length === 0) return [];
 
-    return await ctx.db
+    const lastMessagePerChat = ctx.db
+      .select({
+        chatId: chatMessage.chatId,
+        lastCreatedAt: max(chatMessage.createdAt).as("lastCreatedAt"),
+      })
+      .from(chatMessage)
+      .where(inArray(chatMessage.chatId, chatIds))
+      .groupBy(chatMessage.chatId)
+      .as("lm");
+
+    const rows = await ctx.db
       .select({
         id: chat.id,
         createdAt: chat.createdAt,
@@ -66,14 +95,29 @@ export const chatRouter = {
           email: user.email,
           image: user.image,
         },
+        lastMessage: {
+          id: chatMessage.id,
+          text: chatMessage.text,
+          type: chatMessage.type,
+          createdAt: chatMessage.createdAt,
+        },
       })
       .from(chat)
-      .leftJoin(chatParticipant, eq(chat.id, chatParticipant.chatId))
-      .leftJoin(user, eq(chatParticipant.userId, user.id))
+      .innerJoin(chatParticipant, eq(chat.id, chatParticipant.chatId))
+      .innerJoin(user, eq(chatParticipant.userId, user.id))
+      .leftJoin(lastMessagePerChat, eq(chat.id, lastMessagePerChat.chatId))
+      .leftJoin(
+        chatMessage,
+        and(
+          eq(chatMessage.chatId, lastMessagePerChat.chatId),
+          eq(chatMessage.createdAt, lastMessagePerChat.lastCreatedAt),
+        ),
+      )
       .where(and(inArray(chat.id, chatIds), ne(user.id, userId)))
       .orderBy(desc(chat.updatedAt));
-  }),
 
+    return rows as ChatRow[];
+  }),
   byId: protectedProcedure
     .input(z.object({ chatId: z.uuid() }))
     .query(async ({ ctx, input }) => {
@@ -108,7 +152,7 @@ export const chatRouter = {
     }),
 
   getMessages: protectedProcedure
-    .input(z.object({ chatId: z.string().uuid() }))
+    .input(z.object({ chatId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const currentUserId = ctx.session.user.id;
       const isParticipant = await ctx.db.query.chatParticipant.findFirst({
