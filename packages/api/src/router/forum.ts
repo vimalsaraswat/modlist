@@ -166,18 +166,23 @@ export const forumRouter = {
         categoryId: z.uuid(),
       }),
     )
-    .mutation(({ ctx, input }) => {
-      return ctx.db.insert(forumPost).values({
-        title: input.title,
-        slug: input.title
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "")
-          .slice(0, 150),
-        content: input.content,
-        userId: ctx.session.user.id,
-        categoryId: input.categoryId,
-      });
+    .mutation(async ({ ctx, input }) => {
+      const [post] = await ctx.db
+        .insert(forumPost)
+        .values({
+          title: input.title,
+          slug: input.title
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-]/g, "")
+            .slice(0, 150),
+          content: input.content,
+          userId: ctx.session.user.id,
+          categoryId: input.categoryId,
+        })
+        .returning({ id: forumPost.id });
+
+      return post;
     }),
 
   createReply: protectedProcedure
