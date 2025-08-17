@@ -6,23 +6,6 @@ import { chat, chatMessage, chatParticipant, user } from "@acme/db/schema";
 
 import { protectedProcedure } from "../trpc";
 
-interface ChatRow {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  participantUser: {
-    name: string | null;
-    email: string | null;
-    image: string | null;
-  };
-  lastMessage: {
-    id: string;
-    text: string | null;
-    type: string;
-    createdAt: Date;
-  } | null;
-}
-
 export const chatRouter = {
   create: protectedProcedure
     .input(z.object({ userId: z.string() }))
@@ -116,7 +99,22 @@ export const chatRouter = {
       .where(and(inArray(chat.id, chatIds), ne(user.id, userId)))
       .orderBy(desc(chat.updatedAt));
 
-    return rows as ChatRow[];
+    return rows as {
+      id: string;
+      createdAt: Date;
+      updatedAt: Date;
+      participantUser: {
+        name: string | null;
+        email: string | null;
+        image: string | null;
+      };
+      lastMessage: {
+        id: string;
+        text: string | null;
+        type: string;
+        createdAt: Date;
+      } | null;
+    }[];
   }),
   byId: protectedProcedure
     .input(z.object({ chatId: z.uuid() }))
