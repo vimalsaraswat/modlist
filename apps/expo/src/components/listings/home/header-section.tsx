@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useRouter } from "expo-router";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 
 interface Category {
@@ -32,11 +33,28 @@ const HeaderSection = ({
   onRemoveCategory,
   onRemovePriceFilter,
 }: HeaderSectionProps) => {
+  const router = useRouter();
+
+  const handleCreateListing = () => {
+    router.push("/(tabs)/listings/new");
+  };
+
   return (
     <View className="border-b border-border bg-background px-4 py-3">
-      <Text className="text-2xl font-extrabold text-foreground">
-        Browse Parts
-      </Text>
+      <View className="flex-row items-center justify-between">
+        <Text className="text-2xl font-extrabold text-foreground">
+          Browse Parts
+        </Text>
+        <Pressable
+          onPress={handleCreateListing}
+          className="flex-row items-center rounded-lg bg-primary px-3 py-2"
+        >
+          <Ionicons name="add" size={18} color="white" />
+          <Text className="ml-1 font-semibold text-primary-foreground">
+            Create
+          </Text>
+        </Pressable>
+      </View>
 
       {/* Search Bar */}
       <View className="mt-4 flex-row items-center">
@@ -51,9 +69,9 @@ const HeaderSection = ({
           className="h-12 flex-row items-center justify-center rounded-r-xl border border-border bg-primary px-4"
         >
           <Ionicons name="filter" size={20} color="white" />
-          <Text className="ml-2 font-semibold text-primary-foreground">
+          {/*<Text className="ml-2 font-semibold text-primary-foreground">
             Filter
-          </Text>
+          </Text>*/}
         </Pressable>
       </View>
 

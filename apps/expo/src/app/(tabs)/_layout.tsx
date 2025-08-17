@@ -22,8 +22,8 @@ const TabsLayout = () => {
         tabBarStyle: {
           borderColor: colors.border,
           backgroundColor: colors.background,
-          height: 58 + insets.bottom,
-          paddingTop: 6,
+          height: 52 + insets.bottom,
+          paddingTop: 2,
           paddingBottom: insets.bottom + 6,
           elevation: 10, // Android shadow
           shadowColor: colors.foreground, // iOS shadow

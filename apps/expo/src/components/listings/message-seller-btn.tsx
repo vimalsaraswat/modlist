@@ -39,9 +39,17 @@ const MessageSellerButton = ({
               ? listing.description.slice(0, 247) + "..."
               : listing.description,
         });
-
-        // router.push(`/chats/${data.id}`);
+        router.push({
+          pathname: "/(tabs)/chats/[id]",
+          params: { id: data.id },
+        });
+        Toast.show({
+          type: "success",
+          text1: "Conversation started!",
+          text2: "You've been redirected to the chat.",
+        });
       },
+
       onError: (error) => {
         Toast.show({
           type: "error",
@@ -57,12 +65,7 @@ const MessageSellerButton = ({
   );
 
   const handleClick = () => {
-    // createChat.mutate({ userId: sellerId });
-    Toast.show({
-      type: "info",
-      text1: "Coming Soon!",
-      text2: "This feature is not yet available.",
-    });
+    createChat.mutate({ userId: sellerId });
   };
 
   return (

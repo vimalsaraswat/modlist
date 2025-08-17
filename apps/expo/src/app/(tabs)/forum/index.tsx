@@ -179,14 +179,14 @@ export default function ForumHomeScreen() {
 
   const renderTrendingSkeletons = () => (
     <>
-      {Array.from({ length: 2 }).map((_, i) => (
+      {Array.from({ length: 4 }).map((_, i) => (
         <SkeletonLoader key={`trend-${i}`} />
       ))}
     </>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background pb-10">
       {/* Header */}
       <View className="border-b border-border px-4 pb-4 pt-2">
         <View className="mb-3 flex-row items-center justify-between">

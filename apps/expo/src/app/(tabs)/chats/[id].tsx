@@ -12,7 +12,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import {
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+} from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -20,6 +25,8 @@ import clsx from "clsx";
 import { formatDateLabel, formatTime } from "@acme/helpers";
 
 import type { Message, ProductMetadata } from "~/types/chats";
+import Avatar from "~/components/common/avatar";
+import BackButton from "~/components/common/back-btn";
 import { trpc } from "~/utils/api";
 import { authClient } from "~/utils/auth";
 
@@ -45,13 +52,13 @@ const ProductMessage = ({ metadata }: { metadata: ProductMetadata }) => {
       onPress={() => router.push(`/listings/${metadata.listingId}`)}
       className="overflow-hidden rounded-lg border border-border bg-card"
     >
-      <View className="flex-row">
+      <View className="flex flex-row items-center">
         <Image
           source={{ uri: metadata.image }}
-          className="h-16 w-16"
+          className="h-20 w-20"
           resizeMode="cover"
         />
-        <View className="flex-1 p-3">
+        <View className="w-48 px-2">
           <Text
             className="text-sm font-semibold text-foreground"
             numberOfLines={1}
@@ -59,8 +66,8 @@ const ProductMessage = ({ metadata }: { metadata: ProductMetadata }) => {
             {metadata.title}
           </Text>
           <Text
-            className="mt-1 text-xs text-muted-foreground"
-            numberOfLines={2}
+            className="mt-[2px] text-xs text-muted-foreground"
+            numberOfLines={3}
           >
             {metadata.description}
           </Text>
@@ -137,21 +144,20 @@ const MessageBubble = ({
     >
       <View
         className={clsx(
-          "rounded-2xl px-4 py-2",
-          isMe ? "rounded-br-md bg-primary" : "rounded-bl-md bg-muted",
+          "rounded-3xl px-4 py-2",
+          isMe ? "rounded-br-md bg-primary/80" : "rounded-bl-md bg-muted",
         )}
       >
         {renderContent()}
-        {message.type !== "product" && (
-          <Text
-            className={clsx(
-              "mt-1 self-end text-xs",
-              isMe ? "text-primary-foreground/70" : "text-muted-foreground",
-            )}
-          >
-            {showTime(message.createdAt)}
-          </Text>
-        )}
+
+        <Text
+          className={clsx(
+            "mt-1 self-end text-xs",
+            isMe ? "text-secondary-foreground" : "text-muted-foreground",
+          )}
+        >
+          {showTime(message.createdAt)}
+        </Text>
       </View>
     </View>
   );
@@ -169,7 +175,6 @@ export default function ChatDetailScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  // Queries
   const {
     data: chatData,
     isLoading: chatLoading,
@@ -190,7 +195,6 @@ export default function ChatDetailScreen() {
     ),
   );
 
-  // Mutations
   const sendMessage = useMutation(
     trpc.chat.sendMessage.mutationOptions({
       onSuccess: async () => {
@@ -204,7 +208,6 @@ export default function ChatDetailScreen() {
     }),
   );
 
-  // Group messages by date
   const groupedMessages = messages.reduce(
     (groups: Record<string, Message[]>, message) => {
       const dateKey = new Date(message.createdAt).toDateString();
@@ -215,7 +218,6 @@ export default function ChatDetailScreen() {
     {},
   );
 
-  // Flatten grouped messages with date headers
   const flattenedMessages = Object.entries(groupedMessages).flatMap(
     ([date, msgs]) => [{ type: "date-header", date: new Date(date) }, ...msgs],
   );
@@ -239,7 +241,6 @@ export default function ChatDetailScreen() {
     router.back();
   };
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (flattenedMessages.length > 0) {
       setTimeout(() => {
@@ -263,10 +264,14 @@ export default function ChatDetailScreen() {
     };
   }, []);
 
-  // Loading state
   if (chatLoading || messagesLoading) {
     return (
       <SafeAreaView className="flex-1 bg-background">
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+        />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1DA1F2" />
         </View>
@@ -274,10 +279,14 @@ export default function ChatDetailScreen() {
     );
   }
 
-  // Error state
   if (chatError || messagesError || !chatData) {
     return (
       <SafeAreaView className="flex-1 bg-background">
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+        />
         <View className="flex-1 items-center justify-center px-8">
           <View className="mb-6 h-24 w-24 items-center justify-center rounded-full bg-destructive/10">
             <Ionicons name="warning-outline" size={40} color="#EF4444" />
@@ -307,7 +316,7 @@ export default function ChatDetailScreen() {
     );
   }
 
-  const { chat, participants } = chatData;
+  const { participants } = chatData;
   const otherUser = participants.find(
     (p) => p.user?.email !== session?.user.email,
   );
@@ -315,24 +324,11 @@ export default function ChatDetailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
-      <View className="flex-row items-center border-b border-border px-4 py-3">
-        <TouchableOpacity onPress={handleBack} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#1DA1F2" />
-        </TouchableOpacity>
+      <View className="flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <BackButton />
 
         <View className="flex-1 flex-row items-center">
-          {otherUser?.user?.image ? (
-            <Image
-              source={{ uri: otherUser.user.image }}
-              className="h-10 w-10 rounded-full"
-            />
-          ) : (
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary">
-              <Text className="font-bold text-white">
-                {otherUser?.user?.name?.charAt(0).toUpperCase() || "U"}
-              </Text>
-            </View>
-          )}
+          <Avatar image={otherUser?.user?.image} name={otherUser?.user?.name} />
 
           <View className="ml-3">
             <Text className="font-semibold text-foreground" numberOfLines={1}>
@@ -358,7 +354,7 @@ export default function ChatDetailScreen() {
             }
 
             const message = item as Message;
-            const isMe = message.senderId === session?.user.id; // Replace with actual user ID
+            const isMe = message.senderId === session?.user.id;
 
             return <MessageBubble message={message} isMe={isMe} />;
           }}

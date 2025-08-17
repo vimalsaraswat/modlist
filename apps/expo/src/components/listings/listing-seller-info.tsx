@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, Text, View } from "react-native";
 
+import { authClient } from "~/utils/auth";
 import MessageSellerButton from "./message-seller-btn";
 
 interface User {
@@ -28,6 +29,8 @@ const ListingSellerInfo = ({
   sellerId,
   listing,
 }: ListingSellerInfoProps) => {
+  const { data: session } = authClient.useSession();
+
   return (
     <View>
       <View className="rounded-xl border border-border bg-card p-4">
@@ -47,8 +50,9 @@ const ListingSellerInfo = ({
             </Text>
           </View>
         </View>
-
-        <MessageSellerButton sellerId={sellerId} listing={listing} />
+        {session?.user.id && sellerId !== session.user.id && (
+          <MessageSellerButton sellerId={sellerId} listing={listing} />
+        )}
       </View>
     </View>
   );

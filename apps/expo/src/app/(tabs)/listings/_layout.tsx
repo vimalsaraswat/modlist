@@ -8,6 +8,7 @@ export default function ListingsLayout() {
         options={{ title: "Browse Parts", headerShown: false }}
       />
       <Stack.Screen name="[id]" options={{ title: "Listing Details" }} />
+      <Stack.Screen name="new" options={{ title: "Add Listing" }} />
     </Stack>
   );
 }

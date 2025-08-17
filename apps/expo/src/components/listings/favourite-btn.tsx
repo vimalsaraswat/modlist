@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TouchableOpacity } from "react-native";
 import Toast from "react-native-toast-message";
-import { Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { trpc } from "~/utils/api";
@@ -58,8 +58,8 @@ const FavouriteButton = ({
       disabled={isPending}
       className="p-2"
     >
-      <Feather
-        name="heart"
+      <Ionicons
+        name={isFavourited ? "heart" : "heart-outline"}
         size={24}
         color={isFavourited ? "#ef4444" : "#94a3b8"}
         fill={isFavourited ? "#ef4444" : "none"}

@@ -130,7 +130,7 @@ const HomeScreen = () => {
   ]);
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background pb-10">
       <HeaderSection
         searchText={searchText}
         onSearchChange={setSearchText}
