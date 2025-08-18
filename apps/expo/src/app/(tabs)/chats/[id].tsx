@@ -4,7 +4,9 @@ import {
   Alert,
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
+  Platform,
   RefreshControl,
   Text,
   TextInput,
@@ -12,12 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  Stack,
-  useLocalSearchParams,
-  useNavigation,
-  useRouter,
-} from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -167,12 +164,13 @@ export default function ChatDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: session } = authClient.useSession();
 
-  const navigation = useNavigation();
-
   const router = useRouter();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const [behaviour, setBehaviour] = useState<"padding" | undefined>("padding");
+
   const flatListRef = useRef<FlatList>(null);
 
   const {
@@ -240,6 +238,20 @@ export default function ChatDetailScreen() {
   const handleBack = () => {
     router.back();
   };
+
+  useEffect(() => {
+    const showListener = Keyboard.addListener("keyboardDidShow", () => {
+      setBehaviour("padding");
+    });
+    const hideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setBehaviour(undefined);
+    });
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (flattenedMessages.length > 0) {
@@ -324,7 +336,10 @@ export default function ChatDetailScreen() {
       </View>
 
       {/* Messages */}
-      <KeyboardAvoidingView className="flex-1" behavior="padding">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "android" ? behaviour : undefined}
+      >
         <FlatList
           ref={flatListRef}
           data={flattenedMessages}
