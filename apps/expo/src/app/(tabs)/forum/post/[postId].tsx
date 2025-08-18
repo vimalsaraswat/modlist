@@ -4,7 +4,9 @@ import {
   Alert,
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
+  Platform,
   RefreshControl,
   Text,
   TextInput,
@@ -12,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -149,8 +151,7 @@ export default function ForumPostScreen() {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-
-  const navigation = useNavigation();
+  const [behaviour, setBehaviour] = useState<"padding" | undefined>("padding");
 
   const { data: postData, isLoading } = useQuery(
     trpc.forum.postById.queryOptions({ postId }),
@@ -163,17 +164,16 @@ export default function ForumPostScreen() {
   };
 
   useEffect(() => {
-    navigation.getParent()?.setOptions({
-      tabBarStyle: {
-        display: "none",
-      },
+    const showListener = Keyboard.addListener("keyboardDidShow", () => {
+      setBehaviour("padding");
     });
+    const hideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setBehaviour(undefined);
+    });
+
     return () => {
-      navigation.getParent()?.setOptions({
-        tabBarStyle: {
-          display: "flex",
-        },
-      });
+      showListener.remove();
+      hideListener.remove();
     };
   }, []);
 
@@ -216,7 +216,10 @@ export default function ForumPostScreen() {
       {/* Header */}
       <Header title={post.title} />
 
-      <KeyboardAvoidingView className="flex-1" behavior="padding">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "android" ? behaviour : undefined}
+      >
         <FlatList
           ref={flatListRef}
           data={replies}

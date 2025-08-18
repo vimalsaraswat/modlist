@@ -1,18 +1,17 @@
-import { useEffect } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack, useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
 import ListingCarousel from "~/components/listings/listing-carousel";
 import ListingDetails from "~/components/listings/listing-details";
 import ListingHeader from "~/components/listings/listing-header";
 import ListingSellerInfo from "~/components/listings/listing-seller-info";
+import Header from "~/components/listings/new/header";
 import { trpc } from "~/utils/api";
 
 export default function ListingDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const navigation = useNavigation();
 
   const { data, isPending, error, refetch } = useQuery(
     trpc.listing.byId.queryOptions({
@@ -20,76 +19,48 @@ export default function ListingDetail() {
     }),
   );
 
-  useEffect(() => {
-    navigation.getParent()?.setOptions({
-      tabBarStyle: {
-        display: "none",
-      },
-    });
-    return () => {
-      navigation.getParent()?.setOptions({
-        tabBarStyle: {
-          display: "flex",
-        },
-      });
-    };
-  }, []);
-
   if (isPending) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-background">
-        <Stack.Screen
-          options={{
-            headerShown: false,
-          }}
-        />
-        <ActivityIndicator size="large" color="#1DA1F2" />
+      <SafeAreaView className="flex-1 bg-background">
+        <Header title="" />
+        <View className="flex-1 items-center justify-center px-5">
+          <ActivityIndicator size="large" color="#1DA1F2" />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-background px-5">
-        <Stack.Screen
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Text className="mb-2 text-lg font-bold text-foreground">
-          Error loading listing
-        </Text>
-        <Text className="text-primary underline" onPress={() => refetch()}>
-          Retry
-        </Text>
+      <SafeAreaView className="flex-1 bg-background">
+        <Header title="Failed to load listing" />
+        <View className="flex-1 items-center justify-center px-5">
+          <Text className="mb-2 text-lg font-bold text-foreground">
+            Error loading listing
+          </Text>
+          <Text className="text-primary underline" onPress={() => refetch()}>
+            Retry
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (!data) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-background">
-        <Stack.Screen
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Text className="text-lg font-bold text-foreground">
-          Listing not found
-        </Text>
+      <SafeAreaView className="flex-1 bg-background">
+        <Header title="Listing not found" />
+        <View className="flex-1 items-center justify-center px-5">
+          <Text className="text-lg font-bold text-foreground">
+            Listing not found
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <Stack.Screen
-        options={{
-          title: data.title,
-          headerShown: false,
-        }}
-      />
-
       <ListingHeader
         title={data.title}
         listingId={data.id}

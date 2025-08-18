@@ -249,21 +249,6 @@ export default function ChatDetailScreen() {
     }
   }, [flattenedMessages.length]);
 
-  useEffect(() => {
-    navigation.getParent()?.setOptions({
-      tabBarStyle: {
-        display: "none",
-      },
-    });
-    return () => {
-      navigation.getParent()?.setOptions({
-        tabBarStyle: {
-          display: "flex",
-        },
-      });
-    };
-  }, []);
-
   if (chatLoading || messagesLoading) {
     return (
       <SafeAreaView className="flex-1 bg-background">

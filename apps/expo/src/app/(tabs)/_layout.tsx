@@ -1,5 +1,5 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, Tabs, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useThemeColors } from "~/styles/colors";
@@ -8,32 +8,38 @@ import { authClient } from "~/utils/auth";
 const TabsLayout = () => {
   const insets = useSafeAreaInsets();
   const colors = useThemeColors();
+  const pathname = usePathname();
 
   const { data: session } = authClient.useSession();
 
   if (!session) return <Redirect href="/" />;
 
+  const hideTabBar = pathname.split("/").length >= 3;
+
   return (
     <Tabs
       initialRouteName="listings"
+      backBehavior="fullHistory"
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.foreground,
-        tabBarStyle: {
-          borderColor: colors.border,
-          backgroundColor: colors.background,
-          height: 52 + insets.bottom,
-          paddingTop: 2,
-          paddingBottom: insets.bottom + 6,
-          elevation: 10, // Android shadow
-          shadowColor: colors.foreground, // iOS shadow
-          shadowOpacity: 0.1,
-          shadowOffset: { width: 0, height: -2 },
-          shadowRadius: 8,
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
-          position: "absolute",
-        },
+        tabBarStyle: hideTabBar
+          ? { display: "none" }
+          : {
+              borderColor: colors.border,
+              backgroundColor: colors.background,
+              height: 52 + insets.bottom,
+              paddingTop: 2,
+              paddingBottom: insets.bottom + 6,
+              elevation: 10, // Android shadow
+              shadowColor: colors.foreground, // iOS shadow
+              shadowOpacity: 0.1,
+              shadowOffset: { width: 0, height: -2 },
+              shadowRadius: 8,
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+              position: "absolute",
+            },
         headerShown: false,
         tabBarLabelStyle: {
           fontSize: 12,
