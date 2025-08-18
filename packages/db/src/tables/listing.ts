@@ -35,7 +35,20 @@ export const listing = pgTable("listings", (t) => ({
   partNumber: t.varchar({ length: 20 }),
   latitude: t.numeric({ precision: 9, scale: 6 }),
   longitude: t.numeric({ precision: 9, scale: 6 }),
-  status: t.varchar({ length: 20 }).notNull().default("active"),
+  status: t
+    .varchar({ length: 20 })
+    .notNull()
+    .default("pending_review")
+    .$type<
+      | "draft"
+      | "pending_review"
+      | "active"
+      | "sold"
+      | "expired"
+      | "archived"
+      | "rejected"
+      | "deleted"
+    >(),
   createdAt: t.timestamp().notNull().defaultNow(),
   updatedAt: t.timestamp().notNull().defaultNow(),
 }));

@@ -1,5 +1,4 @@
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 import { pgTable } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
@@ -15,7 +14,7 @@ export const forumCategory = pgTable("forum_category", (t) => ({
     .timestamp()
     .notNull()
     .defaultNow()
-    .$onUpdateFn(() => sql`now()`),
+    .$onUpdateFn(() => new Date()),
 }));
 
 // --- Forum Posts ---
@@ -39,13 +38,13 @@ export const forumPost = pgTable("forum_post", (t) => ({
     .$type<"draft" | "published" | "archived">(),
   viewCount: t.integer("view_count").notNull().default(0),
   replyCount: t.integer("reply_count").notNull().default(0),
-  createdAt: t.timestamp("created_at").notNull().defaultNow(),
+  createdAt: t.timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: t
-    .timestamp("updated_at")
+    .timestamp("updated_at", { mode: "date" })
     .notNull()
     .defaultNow()
-    .$onUpdateFn(() => sql`now()`),
-  publishedAt: t.timestamp("published_at"),
+    .$onUpdateFn(() => new Date()),
+  publishedAt: t.timestamp("published_at", { mode: "date" }),
 }));
 
 // --- Forum Replies ---
@@ -70,5 +69,5 @@ export const forumReply = pgTable("forum_reply", (t) => ({
     .timestamp()
     .notNull()
     .defaultNow()
-    .$onUpdateFn(() => sql`now()`),
+    .$onUpdateFn(() => new Date()),
 }));

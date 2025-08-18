@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import { pgTable } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
@@ -10,7 +9,7 @@ export const chat = pgTable("chat", (t) => ({
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })
-    .$onUpdateFn(() => sql`now()`),
+    .$onUpdateFn(() => new Date()),
 }));
 
 export const chatParticipant = pgTable("chat_participant", (t) => ({
@@ -26,7 +25,7 @@ export const chatParticipant = pgTable("chat_participant", (t) => ({
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })
-    .$onUpdateFn(() => sql`now()`),
+    .$onUpdateFn(() => new Date()),
 }));
 
 export const chatMessage = pgTable("chat_message", (t) => ({
@@ -46,5 +45,5 @@ export const chatMessage = pgTable("chat_message", (t) => ({
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })
-    .$onUpdateFn(() => sql`now()`),
+    .$onUpdateFn(() => new Date()),
 }));

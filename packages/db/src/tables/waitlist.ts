@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import { pgTable } from "drizzle-orm/pg-core";
 
 export const waitlist = pgTable("waitlist", (t) => ({
@@ -10,5 +9,5 @@ export const waitlist = pgTable("waitlist", (t) => ({
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })
-    .$onUpdateFn(() => sql`now()`),
+    .$onUpdateFn(() => new Date()),
 }));
