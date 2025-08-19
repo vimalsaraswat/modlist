@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { formatDistanceToNow } from "@acme/helpers";
+import { formatCompactNumber, formatDistanceToNow } from "@acme/helpers";
 
 import { trpc } from "~/utils/api";
 
@@ -29,6 +29,7 @@ interface Post {
   title: string;
   content: string;
   createdAt: Date;
+  viewCount: number;
   replyCount: number;
   author: {
     name: string;
@@ -114,8 +115,18 @@ const TrendingPostCard = ({ post }: { post: Post }) => {
       <View className="mt-2 flex-row items-center">
         <Ionicons name="chatbubble-outline" size={14} color="#9CA3AF" />
         <Text className="ml-1 text-xs text-muted-foreground">
-          {post.replyCount} replies
+          {formatCompactNumber(post.replyCount)} replies
         </Text>
+
+        {post.viewCount && (
+          <View className="ml-4 flex-row items-center">
+            <Ionicons name="eye-outline" size={14} color="#9CA3AF" />
+            <Text className="ml-1 text-xs text-muted-foreground">
+              {formatCompactNumber(post.viewCount)}{" "}
+              {post.viewCount === 1 ? "view" : "views"}
+            </Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
