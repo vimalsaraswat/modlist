@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -22,33 +21,35 @@ import clsx from "clsx";
 import { formatDistanceToNow } from "@acme/helpers";
 
 import type { Post, Reply } from "~/types/forum";
+import Avatar from "~/components/common/avatar";
 import Header from "~/components/listings/new/header";
 import { trpc } from "~/utils/api";
 
 const PostHeader = ({ post }: { post: Post }) => (
   <View className="mb-4">
-    {/*<Text className="mb-3 text-2xl font-bold text-foreground">
-      {post.title}
-    </Text>*/}
-
     <View className="flex-row items-center">
-      {post.author?.avatar ? (
-        <Image
-          source={{ uri: post.author.avatar }}
-          style={{ width: 24, height: 24, borderRadius: 12 }}
-        />
-      ) : (
-        <View className="h-6 w-6 items-center justify-center rounded-full bg-muted">
-          <Ionicons name="person-circle-outline" size={16} color="#9CA3AF" />
-        </View>
-      )}
+      <Avatar image={post.author?.avatar} name={post.author?.name} />
+
       <View className="ml-3">
         <Text className="font-semibold text-foreground">
           {post.author?.name}
         </Text>
-        <Text className="text-xs text-muted-foreground">
-          {formatDistanceToNow(post.createdAt)}
-        </Text>
+        <View className="flex-row items-center">
+          <Text className="text-xs text-muted-foreground">
+            {formatDistanceToNow(post.createdAt)}
+          </Text>
+          <Text className="mx-1 text-xs text-muted-foreground">•</Text>
+          <View className="flex-row items-center">
+            <Ionicons name="eye" size={12} color="#9CA3AF" />
+            <Text className="ml-1 text-xs text-muted-foreground">
+              {new Intl.NumberFormat("en-US", {
+                notation: "compact",
+                compactDisplay: "short",
+              }).format(post.viewCount)}{" "}
+              {post.viewCount === 1 ? "view" : "views"}
+            </Text>
+          </View>
+        </View>
       </View>
     </View>
   </View>
@@ -63,16 +64,12 @@ const PostContent = ({ content }: { content: string }) => (
 const ReplyItem = ({ reply }: { reply: Reply }) => (
   <View className="mb-4 rounded-xl border border-border bg-card p-4">
     <View className="mb-2 flex-row items-center">
-      {reply.author?.avatar ? (
-        <Image
-          source={{ uri: reply.author.avatar }}
-          style={{ width: 24, height: 24, borderRadius: 12 }}
-        />
-      ) : (
-        <View className="h-6 w-6 items-center justify-center rounded-full bg-muted">
-          <Ionicons name="person-circle-outline" size={16} color="#9CA3AF" />
-        </View>
-      )}
+      <Avatar
+        image={reply.author?.avatar}
+        name={reply.author?.name}
+        size="sm"
+      />
+
       <View className="ml-2">
         <Text className="text-sm font-medium text-foreground">
           {reply.author?.name}
@@ -154,7 +151,12 @@ export default function ForumPostScreen() {
   const [behaviour, setBehaviour] = useState<"padding" | undefined>("padding");
 
   const { data: postData, isLoading } = useQuery(
-    trpc.forum.postById.queryOptions({ postId }),
+    trpc.forum.postById.queryOptions(
+      { postId },
+      {
+        staleTime: 60 * 1000,
+      },
+    ),
   );
 
   const handleRefresh = async () => {

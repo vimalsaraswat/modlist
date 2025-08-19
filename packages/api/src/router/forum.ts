@@ -73,6 +73,7 @@ export const forumRouter = {
         id: forumPost.id,
         title: forumPost.title,
         content: forumPost.content,
+        viewCount: forumPost.viewCount,
         author: {
           name: user.name,
           image: user.image,
@@ -109,13 +110,12 @@ export const forumRouter = {
   postById: publicProcedure
     .input(z.object({ postId: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      // fetch post + author
       const post = await ctx.db
         .select({
           id: forumPost.id,
           title: forumPost.title,
           content: forumPost.content,
-          // viewCount: forumPost.viewCount,
+          viewCount: forumPost.viewCount,
           createdAt: forumPost.createdAt,
           author: {
             id: user.id,
@@ -131,6 +131,14 @@ export const forumRouter = {
         .then((rows) => rows[0]);
 
       if (!post) return null;
+
+      await ctx.db
+        .update(forumPost)
+        .set({
+          viewCount: sql`${forumPost.viewCount} + 1`,
+        })
+        .where(eq(forumPost.id, input.postId))
+        .execute();
 
       const replies = await ctx.db
         .select({
@@ -148,12 +156,6 @@ export const forumRouter = {
         .where(eq(forumReply.postId, input.postId))
         .orderBy(desc(forumReply.createdAt))
         .execute();
-
-      // await ctx.db
-      //   .update(forumPost)
-      //   .set({ viewCount: post.viewCount + 1 })
-      //   .where(eq(forumPost.id, post.id))
-      //   .execute();
 
       return { post, replies };
     }),
