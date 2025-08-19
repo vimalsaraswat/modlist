@@ -18,7 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 
-import { formatDistanceToNow } from "@acme/helpers";
+import { formatCompactNumber, formatDistanceToNow } from "@acme/helpers";
 
 import type { Post, Reply } from "~/types/forum";
 import Avatar from "~/components/common/avatar";
@@ -42,10 +42,7 @@ const PostHeader = ({ post }: { post: Post }) => (
           <View className="flex-row items-center">
             <Ionicons name="eye" size={12} color="#9CA3AF" />
             <Text className="ml-1 text-xs text-muted-foreground">
-              {new Intl.NumberFormat("en-US", {
-                notation: "compact",
-                compactDisplay: "short",
-              }).format(post.viewCount)}{" "}
+              {formatCompactNumber(post.viewCount)}{" "}
               {post.viewCount === 1 ? "view" : "views"}
             </Text>
           </View>

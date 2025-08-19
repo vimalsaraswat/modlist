@@ -2,6 +2,8 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
+import { formatCurrency } from "@acme/helpers";
+
 interface ListingDetailsProps {
   title: string;
   price: number;
@@ -28,10 +30,7 @@ const ListingDetails = ({
       {/* Price */}
       <View className="mb-6 border-b border-border py-4">
         <Text className="text-4xl font-bold text-primary">
-          {new Intl.NumberFormat("en-IN", {
-            style: "currency",
-            currency: "INR",
-          }).format(price)}
+          {formatCurrency(price)}
         </Text>
       </View>
 

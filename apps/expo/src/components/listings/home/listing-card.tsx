@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
+import { formatCurrency } from "@acme/helpers";
+
 import type { ListingItem } from "~/types/listings";
 
 interface ListingCardProps {
@@ -22,13 +24,7 @@ const ListingCard = ({ item }: ListingCardProps) => {
   );
 
   const formattedPrice = useMemo(
-    () =>
-      item.price
-        ? new Intl.NumberFormat("en-IN", {
-            style: "currency",
-            currency: "INR",
-          }).format(item.price)
-        : "N/A",
+    () => (item.price ? formatCurrency(item.price) : "N/A"),
     [item.price],
   );
 
