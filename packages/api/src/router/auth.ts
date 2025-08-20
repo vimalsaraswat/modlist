@@ -6,7 +6,7 @@ import {
   cities,
   favourite,
   listing,
-  listingImage,
+  media,
   user as userTable,
 } from "@acme/db/schema";
 
@@ -45,14 +45,14 @@ export const authRouter = {
           category: category.name,
           city: cities.name,
           createdAt: listing.createdAt,
-          imageUrl: listingImage.url,
+          imageUrl: media.url,
         })
         .from(listing)
         .leftJoin(
-          listingImage,
+          media,
           and(
-            eq(listingImage.listingId, listing.id),
-            eq(listingImage.position, 0), // main image
+            eq(media.listingId, listing.id),
+            eq(media.position, 0), // main image
           ),
         )
         .leftJoin(cities, eq(cities.id, listing.cityId))
@@ -68,16 +68,13 @@ export const authRouter = {
           id: favourite.listingId,
           title: listing.title,
           price: listing.price,
-          imageUrl: listingImage.url,
+          imageUrl: media.url,
         })
         .from(favourite)
         .innerJoin(listing, eq(listing.id, favourite.listingId))
         .leftJoin(
-          listingImage,
-          and(
-            eq(listingImage.listingId, listing.id),
-            eq(listingImage.position, 0),
-          ),
+          media,
+          and(eq(media.listingId, listing.id), eq(media.position, 0)),
         )
         .where(eq(favourite.userId, userId))
         .execute();

@@ -7,8 +7,8 @@ import {
   cities,
   favourite,
   listing,
-  listingImage,
   make,
+  media,
   model,
   user,
 } from "@acme/db/schema";
@@ -17,7 +17,7 @@ import { addListingSchema } from "@acme/validators";
 import { protectedProcedure, publicProcedure } from "../trpc";
 
 type NewListing = typeof listing.$inferInsert;
-type NewListingImage = typeof listingImage.$inferInsert;
+type NewListingImage = typeof media.$inferInsert;
 
 export const listingRouter = {
   categoryList: publicProcedure.query(({ ctx }) =>
@@ -101,15 +101,12 @@ export const listingRouter = {
           status: listing.status,
           createdAt: listing.createdAt,
           updatedAt: listing.updatedAt,
-          imageUrl: listingImage.url,
+          imageUrl: media.url,
         })
         .from(listing)
         .leftJoin(
-          listingImage,
-          and(
-            eq(listingImage.listingId, listing.id),
-            eq(listingImage.position, 0),
-          ),
+          media,
+          and(eq(media.listingId, listing.id), eq(media.position, 0)),
         )
         .leftJoin(cities, eq(cities.id, listing.cityId))
         .leftJoin(category, eq(category.id, listing.categoryId))
@@ -122,6 +119,99 @@ export const listingRouter = {
       let nextCursor: number | undefined = undefined;
       if (items.length > limit) {
         items.pop(); // remove the extra one
+        nextCursor = cursor + limit;
+      }
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
+
+  favouritesList: protectedProcedure
+    .input(
+      z.object({
+        keyword: z.string().optional(),
+        categoryId: z.number().optional(),
+        makeId: z.number().optional(),
+        modelId: z.number().optional(),
+        cityId: z.number().optional(),
+        priceMin: z.number().optional(),
+        priceMax: z.number().optional(),
+        limit: z.number().min(1).max(100).default(20),
+        cursor: z.number().min(0).default(0),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const {
+        keyword,
+        categoryId,
+        makeId,
+        modelId,
+        cityId,
+        priceMin,
+        priceMax,
+        limit,
+        cursor,
+      } = input;
+
+      const filters = [];
+
+      filters.push(eq(favourite.userId, userId));
+      if (keyword) {
+        const kw = `%${keyword.toLowerCase()}%`;
+        filters.push(
+          or(
+            ilike(listing.title, kw),
+            ilike(listing.description, kw),
+            ilike(listing.partNumber, kw),
+          ),
+        );
+      }
+
+      if (categoryId) filters.push(eq(listing.categoryId, categoryId));
+      if (makeId) filters.push(eq(listing.makeId, makeId));
+      if (modelId) filters.push(eq(listing.modelId, modelId));
+      if (cityId) filters.push(eq(listing.cityId, cityId));
+      if (priceMin !== undefined) filters.push(gte(listing.price, priceMin));
+      if (priceMax !== undefined) filters.push(lte(listing.price, priceMax));
+
+      const items = await ctx.db
+        .select({
+          id: listing.id,
+          userId: listing.userId,
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+          makeId: listing.makeId,
+          modelId: listing.modelId,
+          category: category.name,
+          city: cities.name,
+          latitude: listing.latitude,
+          longitude: listing.longitude,
+          status: listing.status,
+          createdAt: listing.createdAt,
+          updatedAt: listing.updatedAt,
+          imageUrl: media.url,
+        })
+        .from(favourite) // start from favourites table
+        .innerJoin(listing, eq(favourite.listingId, listing.id))
+        .leftJoin(
+          media,
+          and(eq(media.listingId, listing.id), eq(media.position, 0)),
+        )
+        .leftJoin(cities, eq(cities.id, listing.cityId))
+        .leftJoin(category, eq(category.id, listing.categoryId))
+        .where(filters.length ? and(...filters) : undefined)
+        .orderBy(desc(listing.createdAt))
+        .limit(limit + 1) // fetch one extra for pagination
+        .offset(cursor)
+        .execute();
+
+      let nextCursor: number | undefined = undefined;
+      if (items.length > limit) {
+        items.pop();
         nextCursor = cursor + limit;
       }
 
@@ -175,10 +265,10 @@ export const listingRouter = {
 
       const fetchListingImages = () =>
         ctx.db
-          .select({ url: listingImage.url })
-          .from(listingImage)
-          .where(eq(listingImage.listingId, listingId))
-          .orderBy(listingImage.position)
+          .select({ url: media.url })
+          .from(media)
+          .where(eq(media.listingId, listingId))
+          .orderBy(media.position)
           .execute();
 
       const fetchIsFavourite = () => {
@@ -205,6 +295,14 @@ export const listingRouter = {
 
       const listingData = listingResult[0];
       if (!listingData) return null;
+
+      // await ctx.db
+      //   .update(listing)
+      //   .set({
+      //     viewCount: sql`${listing.viewCount} + 1`,
+      //   })
+      //   .where(eq(listing.id, listingId))
+      //   .execute();
 
       return {
         ...listingData,
@@ -245,7 +343,7 @@ export const listingRouter = {
           }),
         );
 
-        await ctx.db.insert(listingImage).values(imagesToInsert);
+        await ctx.db.insert(media).values(imagesToInsert);
       }
 
       return { id };

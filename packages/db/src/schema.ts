@@ -7,3 +7,5 @@ export * from "./tables/post";
 export * from "./tables/review";
 export * from "./tables/waitlist";
 export * from "./tables/forum";
+export * from "./tables/media";
+export * from "./tables/garage";

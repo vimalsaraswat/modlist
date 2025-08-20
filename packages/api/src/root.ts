@@ -1,6 +1,7 @@
 import { authRouter } from "./router/auth";
 import { chatRouter } from "./router/chat";
 import { forumRouter } from "./router/forum";
+import { garageRouter } from "./router/garage";
 import { listingRouter } from "./router/listing";
 import { postRouter } from "./router/post";
 import { uploadRouter } from "./router/uploader";
@@ -12,6 +13,7 @@ export const appRouter = createTRPCRouter({
   chat: chatRouter,
   post: postRouter,
   forum: forumRouter,
+  garage: garageRouter,
   listing: listingRouter,
   uploader: uploadRouter,
   waitlist: waitlistRouter,
