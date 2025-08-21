@@ -32,7 +32,7 @@ const ListingCard = ({ item }: ListingCardProps) => {
     <Pressable
       onPress={() =>
         router.push({
-          pathname: "/(tabs)/listings/[id]",
+          pathname: "/listings/[id]",
           params: { id: item.id },
         })
       }
