@@ -23,6 +23,7 @@ export const authRouter = {
           id: userTable.id,
           name: userTable.name,
           image: userTable.image,
+          email: userTable.email,
           createdAt: userTable.createdAt,
           // cityName: cities.name,
         })
@@ -83,6 +84,7 @@ export const authRouter = {
         id: user.id,
         name: user.name,
         image: user.image,
+        email: user.email,
         // city: user.cityName || "India", // fallback
         createdAt: user.createdAt,
         isVerified: false,

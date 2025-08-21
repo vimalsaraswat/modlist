@@ -1,5 +1,5 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { garageCar, make, media, model } from "@acme/db/schema";
@@ -28,13 +28,14 @@ export const garageRouter = {
         updatedAt: garageCar.updatedAt,
         make: make.name,
         model: model.name,
-        images: media.url,
+        images: sql<string[]>`COALESCE(array_agg(${media.url}), '{}')`,
       })
       .from(garageCar)
       .leftJoin(make, eq(make.id, garageCar.makeId))
       .leftJoin(model, eq(model.id, garageCar.modelId))
       .leftJoin(media, eq(media.garageCarId, garageCar.id))
       .where(eq(garageCar.userId, userId))
+      .groupBy(garageCar.id, make.name, model.name)
       .orderBy(desc(garageCar.createdAt))
       .execute();
   }),
