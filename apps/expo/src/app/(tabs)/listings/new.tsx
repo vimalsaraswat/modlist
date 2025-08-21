@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -10,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-// import * as ImagePicker from "expo-image-picker";
+import * as ImagePicker from "expo-image-picker";
 import { Stack, useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,8 +37,8 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({
 
 const AddListingScreen = () => {
   const queryClient = useQueryClient();
-
   const navigation = useNavigation();
+
   // Form state
   const [title, setTitle] = useState("");
   const [partNumber, setPartNumber] = useState("");
@@ -47,7 +49,12 @@ const AddListingScreen = () => {
   const [selectedModel, setSelectedModel] = useState<number | null>(null);
   const [selectedCity, setSelectedCity] = useState<number | null>(null);
 
+  const [behaviour, setBehaviour] = useState<"padding" | undefined>("padding");
+
   const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<
+    { uri: string; name: string; type: string }[]
+  >([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Queries
@@ -56,7 +63,6 @@ const AddListingScreen = () => {
   );
   const { data: makes = [] } = useQuery(trpc.listing.makeList.queryOptions());
   const { data: cities = [] } = useQuery(trpc.listing.cityList.queryOptions());
-
   const { data: models = [], isPending: modelsLoading } = useQuery(
     trpc.listing.modelListByMake.queryOptions(
       { makeId: selectedMake ?? -1 },
@@ -64,79 +70,201 @@ const AddListingScreen = () => {
     ),
   );
 
+  // Mutations
   const createListing = useMutation(
     trpc.listing.create.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries(trpc.listing.list.pathFilter());
-        // toast.success("Listing created!");
-        // navigation.goBack();
+        Toast.show({ type: "success", text1: "Listing created!" });
+        navigation.goBack();
       },
       onError: () => {
-        // toast.error("Failed to create listing");
+        Toast.show({ type: "error", text1: "Failed to create listing" });
       },
     }),
   );
 
-  // Handlers
+  const getPresignedUrl = useMutation(
+    trpc.uploader.getPreSignedUrl.mutationOptions({
+      onError: () => {
+        Toast.show({ type: "error", text1: "Image upload failed" });
+      },
+    }),
+  );
+
+  // Pick images
   const handlePickImages = async () => {
-    // const result = await ImagePicker.launchImageLibraryAsync({
-    //   allowsMultipleSelection: true,
-    //   mediaTypes: ["images"],
-    //   quality: 0.8,
-    //   selectionLimit: 5,
-    // });
-    // if (!result.canceled) {
-    //   setImages(result.assets.map((a) => a.uri).slice(0, 5));
-    // }
+    const MAX_IMAGE_SIZE_BYTES = 1 * 1024 * 1024; // 5 MB
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsMultipleSelection: true,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      selectionLimit: 5,
+    });
+
+    if (!result.canceled) {
+      const validAssets = [];
+      let oversizedImagesCount = 0;
+
+      for (const asset of result.assets) {
+        // console.log(`Image: ${asset.fileName}, Size: ${asset.fileSize} bytes`);
+        if (asset.fileSize && asset.fileSize > MAX_IMAGE_SIZE_BYTES) {
+          oversizedImagesCount++;
+          continue; // Skip this image
+        }
+        validAssets.push({
+          uri: asset.uri,
+          name: asset.fileName ?? `image_${Date.now()}_${Math.random()}.jpg`,
+          type: asset.type ?? "image/jpeg",
+        });
+      }
+
+      if (oversizedImagesCount > 0) {
+        Toast.show({
+          type: "error",
+          text1: "Some images were too large",
+          text2: `Please select images smaller than ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)} MB.`,
+        });
+      }
+
+      // Append valid assets, respecting the 5-image limit
+      const currentImagesCount = images.length;
+      const spaceLeft = 5 - currentImagesCount;
+      const assetsToAdd = validAssets.slice(0, spaceLeft);
+
+      setImages((prev) => [...prev, ...assetsToAdd.map((f) => f.uri)]);
+      setImageFiles((prev) => [...prev, ...assetsToAdd]);
+
+      if (validAssets.length > spaceLeft) {
+        Toast.show({
+          type: "info",
+          text1: "Image limit reached",
+          text2: `You can only upload a maximum of 5 images.`,
+        });
+      }
+    }
   };
 
+  // Upload images via presigned URLs
+  const handleUploadImages = async () => {
+    return Promise.all(
+      imageFiles.map(async (file) => {
+        const response = await fetch(file.uri);
+        const blob = await response.blob();
+
+        console.log("Blob size:", blob.size);
+
+        const res = await getPresignedUrl.mutateAsync({
+          fileName: file.name,
+          fileSize: blob.size, // use blob size instead of guessing
+          mimeType: file.type,
+        });
+
+        await fetch(res.presignedUrl, {
+          method: "PUT",
+          body: blob,
+          headers: { "Content-Type": file.type },
+        });
+
+        return res.presignedUrl.split("?")[0];
+      }),
+    );
+  };
+
+  // Submit
   const handleSubmit = async () => {
-    if (
-      !title ||
-      !description ||
-      !price ||
-      !selectedCategory ||
-      !selectedCity ||
-      !selectedMake ||
-      !selectedModel
-    ) {
+    if (!title) {
       Toast.show({
         type: "error",
-        text1: "Please fill in all required fields",
+        text1: "Please enter a title for your listing.",
       });
       return;
     }
+
+    if (!description) {
+      Toast.show({
+        type: "error",
+        text1: "Please enter a description for your listing.",
+      });
+      return;
+    }
+
+    const priceValue = Number(price);
+    if (isNaN(priceValue) || priceValue <= 0) {
+      Toast.show({
+        type: "error",
+        text1: "Please enter a valid price (must be a positive number).",
+      });
+      return;
+    }
+
+    if (!selectedCategory) {
+      Toast.show({ type: "error", text1: "Please select a category." });
+      return;
+    }
+
+    if (!selectedCity) {
+      Toast.show({ type: "error", text1: "Please select a city." });
+      return;
+    }
+
     if (images.length === 0) {
       Toast.show({
         type: "error",
-        text1: "Please upload at least one image",
+        text1: "Please upload at least one image for your listing.",
       });
       return;
     }
+
+    if (!selectedMake) {
+      Toast.show({ type: "error", text1: "Please select a make." });
+      return;
+    }
+
+    if (!selectedModel) {
+      Toast.show({ type: "error", text1: "Please select a model." });
+      return;
+    }
+
+    // Prepare data for validation schema (if any beyond basic checks)
+    const listingData = {
+      title,
+      description,
+      price: priceValue,
+      categoryId: selectedCategory,
+      makeId: selectedMake,
+      modelId: selectedModel,
+      cityId: selectedCity,
+      partNumber: partNumber || undefined,
+    };
+
     setIsSubmitting(true);
     try {
+      const uploadedUrls = await handleUploadImages();
       await createListing.mutateAsync({
-        title,
-        description,
-        price: Number(price),
-        categoryId: selectedCategory,
-        makeId: selectedMake,
-        modelId: selectedModel,
-        cityId: selectedCity,
-        imageUrls: images, // TODO: hook up presigned URL upload flow
-        partNumber,
+        ...listingData,
+        imageUrls: uploadedUrls.filter((url): url is string => !!url),
       });
+    } catch (err) {
+      Toast.show({ type: "error", text1: "Something went wrong" });
+      console.log("Error creating listing: ", err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
-    navigation.getParent()?.setOptions({
-      tabBarVisible: false,
+    const showListener = Keyboard.addListener("keyboardDidShow", () => {
+      setBehaviour("padding");
     });
+    const hideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setBehaviour(undefined);
+    });
+
     return () => {
-      navigation.getParent()?.setOptions({ tabBarVisible: true });
+      showListener.remove();
+      hideListener.remove();
     };
   }, []);
 
@@ -148,26 +276,30 @@ const AddListingScreen = () => {
           headerShown: false,
         }}
       />
-      <KeyboardAvoidingView className="flex-1" behavior="padding">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "android" ? behaviour : undefined}
+      >
         <Header title="Create" />
         <ScrollView className="flex-1 px-3 pt-3">
           {/* Photos */}
           <Section title="Photos (up to 5)">
             <ScrollView
               horizontal
-              className="flex-row gap-3 p-3"
+              className="flex flex-row p-3"
               showsHorizontalScrollIndicator={false}
             >
               {images.map((uri, idx) => (
-                <View key={idx} className="relative">
+                <View key={idx} className="relative mr-3">
                   <Image
                     source={{ uri }}
                     className="h-28 w-28 rounded-lg border border-border object-cover"
                   />
                   <Pressable
-                    onPress={() =>
-                      setImages((prev) => prev.filter((_, i) => i !== idx))
-                    }
+                    onPress={() => {
+                      setImages((prev) => prev.filter((_, i) => i !== idx));
+                      setImageFiles((prev) => prev.filter((_, i) => i !== idx));
+                    }}
                     className="absolute -right-2 -top-2 rounded-full bg-destructive p-1"
                   >
                     <Ionicons name="close" size={14} color="white" />
