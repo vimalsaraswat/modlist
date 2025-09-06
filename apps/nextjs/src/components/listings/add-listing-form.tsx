@@ -125,12 +125,30 @@ export default function AddListingForm() {
     const files = e.target.files;
     if (!files) return;
 
-    const newUrls = Array.from(files)
-      .slice(0, 5)
-      .map((file) => URL.createObjectURL(file));
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
 
-    setImages((prev) => [...prev, ...newUrls].slice(0, 5));
-    setImageFiles((prev) => [...prev, ...Array.from(files)].slice(0, 5));
+    const newValidFiles: File[] = [];
+    const newValidUrls: string[] = [];
+
+    Array.from(files).forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`Image "${file.name}" is too large (max 2MB).`);
+      } else if (!allowedTypes.includes(file.type)) {
+        toast.error(
+          (file.name ? file.name + " is of i" : "I") +
+            "nvalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.",
+        );
+        e.target.value = ""; // Clear the input
+      } else {
+        newValidFiles.push(file);
+        newValidUrls.push(URL.createObjectURL(file));
+      }
+    });
+
+    // Combine existing images with new valid ones, then apply the 5-image limit
+    setImages((prev) => [...prev, ...newValidUrls].slice(0, 5));
+    setImageFiles((prev) => [...prev, ...newValidFiles].slice(0, 5));
   };
 
   const removeImage = (index: number) => {

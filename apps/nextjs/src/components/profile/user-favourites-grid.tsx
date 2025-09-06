@@ -1,9 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { HeartIcon } from "lucide-react";
 
 import { Card, CardContent } from "@acme/ui/card";
-
-import FavouriteButton from "../listings/favourite-button";
 
 export default function UserFavoritesGrid({
   favourites,
@@ -41,16 +40,13 @@ export default function UserFavoritesGrid({
             </div>
             <CardContent className="p-4">
               <h3 className="mb-2 line-clamp-2 text-sm font-semibold">
-                <Link href={`/listings/${item.id}`}>{item.title}</Link>
+                {item.title}
               </h3>
               <div className="flex items-center justify-between">
                 <span className="text-lg font-bold text-primary">
                   ₹{item.price.toLocaleString()}
                 </span>
-                <FavouriteButton
-                  listingId={item.id}
-                  initialIsFavourited={true}
-                />
+                <HeartIcon className="h-4 w-4 fill-red-500 text-red-500 hover:fill-red-600 hover:text-red-600" />
               </div>
             </CardContent>
           </Card>

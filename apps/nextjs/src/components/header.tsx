@@ -4,17 +4,20 @@ import { Settings } from "lucide-react";
 import { Badge } from "@acme/ui/badge";
 import { ThemeToggle } from "@acme/ui/theme";
 
+import { getSession } from "~/auth/server";
 import Navbar from "./navbar";
 import { UserAccountNav } from "./user-account-nav";
 
-const Header = () => {
+const Header = async () => {
+  const session = await getSession();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 max-w-screen-2xl items-center">
         {/* Logo Section - Responsive sizing and spacing */}
         <div className="mr-4 flex">
           <div className="md:hidden">
-            <Navbar />
+            <Navbar loggedIn={!!session} />
           </div>
           <Link
             href="/"
@@ -41,7 +44,7 @@ const Header = () => {
 
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="hidden md:block">
-            <Navbar />
+            <Navbar loggedIn={!!session} />
           </div>
           <div className="md:hidden" />
 

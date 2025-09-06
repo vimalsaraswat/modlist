@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { List, Menu, MessageSquare, Plus } from "lucide-react";
+import { List, Menu, MessageCircle, MessageSquare, Plus } from "lucide-react";
 
 import { Button } from "@acme/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@acme/ui/sheet";
@@ -24,9 +24,15 @@ const navItems = [
     href: "/forum",
     Icon: MessageSquare,
   },
+  {
+    label: "Chats",
+    href: "/chats",
+    Icon: MessageCircle,
+    requireLogin: true,
+  },
 ];
 
-const Navbar = () => {
+const Navbar = ({ loggedIn }: { loggedIn: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -34,7 +40,9 @@ const Navbar = () => {
     <>
       {/* Desktop Navigation */}
       <nav className="hidden items-center gap-1 md:flex">
-        {navItems.map(({ label, href, Icon }) => {
+        {navItems.map(({ label, href, Icon, requireLogin }) => {
+          if (!loggedIn && requireLogin) return null;
+
           const isActive = pathname === href;
           return (
             <Button
@@ -64,7 +72,9 @@ const Navbar = () => {
         <SheetContent side="right" className="w-80">
           <SheetTitle />
           <div className="mt-6 flex flex-col gap-3">
-            {navItems.map(({ label, href, Icon }) => {
+            {navItems.map(({ label, href, Icon, requireLogin }) => {
+              if (!loggedIn && requireLogin) return null;
+
               const isActive = pathname === href;
               return (
                 <Button

@@ -9,14 +9,22 @@ export default function UserListingsGrid({
   listings,
 }: {
   listings: {
+    price: number;
+    status:
+      | "pending_review"
+      | "draft"
+      | "active"
+      | "sold"
+      | "expired"
+      | "archived"
+      | "rejected"
+      | "deleted";
     id: string;
     title: string;
-    price: number;
     category: string | null;
     city: string | null;
     createdAt: Date;
     imageUrl: string | null;
-    status: "active" | "sold" | "draft";
   }[];
 }) {
   if (listings.length === 0) {
@@ -48,7 +56,7 @@ export default function UserListingsGrid({
           imageUrl={listing.imageUrl}
           category={listing.category}
           createdAt={listing.createdAt}
-          // description={listing.description}
+          status={listing.status}
         />
       ))}
     </div>

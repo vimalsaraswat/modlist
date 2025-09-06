@@ -20,15 +20,17 @@ export function ListingGrid() {
         ? Number(param)
         : undefined;
 
+    const parseStringParam = (param: string | null) =>
+      typeof param === "string" && param.trim() !== "" ? param : undefined;
+
     return {
       categoryId: parseNumericParam(searchParams.get("category")),
       makeId: parseNumericParam(searchParams.get("make")),
       modelId: parseNumericParam(searchParams.get("model")),
       cityId: parseNumericParam(searchParams.get("city")),
-      keyword: (() => {
-        const q = searchParams.get("query");
-        return typeof q === "string" && q.trim() !== "" ? q : undefined;
-      })(),
+      priceMin: parseNumericParam(searchParams.get("minPrice")),
+      priceMax: parseNumericParam(searchParams.get("maxPrice")),
+      keyword: parseStringParam(searchParams.get("query")),
     };
   }, [searchParams]);
 
