@@ -14,8 +14,8 @@ export const user = pgTable("user", (t) => ({
     .default("user")
     .$type<"user" | "admin">(),
 
-  phoneNumber: t.varchar({ length: 20 }),
-  phoneVerified: t.boolean().notNull().default(false),
+  phoneNumber: t.text(),
+  phoneNumberVerified: t.boolean().default(false),
 
   bio: t.varchar({ length: 280 }),
   cityId: t.integer().references(() => cities.id, { onDelete: "set null" }),

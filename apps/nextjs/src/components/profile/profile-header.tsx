@@ -18,7 +18,7 @@ export default function ProfileHeader({
     email: string;
     createdAt: Date;
     cityId: number | null;
-    phoneVerified: boolean;
+    phoneNumberVerified: boolean;
     totalListings: number;
     totalFavourites: number;
   };
@@ -38,7 +38,7 @@ export default function ProfileHeader({
           {/* Name + Badge */}
           <div className="flex flex-col items-center sm:flex-row sm:items-center sm:gap-3">
             <h1 className="text-3xl font-semibold">{user.name}</h1>
-            {user.phoneVerified && (
+            {user.phoneNumberVerified && (
               <Badge
                 variant="secondary"
                 className="flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium"
