@@ -1,13 +1,31 @@
 import { pgTable } from "drizzle-orm/pg-core";
 
+import { cities } from "./listing";
+
 export const user = pgTable("user", (t) => ({
   id: t.text().primaryKey(),
   name: t.text().notNull(),
   email: t.text().notNull().unique(),
   emailVerified: t.boolean().notNull(),
   image: t.text(),
+  role: t
+    .varchar({ length: 20 })
+    .notNull()
+    .default("user")
+    .$type<"user" | "admin">(),
+
+  phoneNumber: t.varchar({ length: 20 }),
+  phoneVerified: t.boolean().notNull().default(false),
+
+  bio: t.varchar({ length: 280 }),
+  cityId: t.integer().references(() => cities.id, { onDelete: "set null" }),
+
   createdAt: t.timestamp().notNull(),
-  updatedAt: t.timestamp().notNull(),
+  updatedAt: t
+    .timestamp({ mode: "date" })
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
 }));
 
 export const session = pgTable("session", (t) => ({

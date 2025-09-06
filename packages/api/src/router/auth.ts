@@ -1,6 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { z } from "zod/v4";
 
-import { and, eq } from "@acme/db";
+import { and, desc, eq } from "@acme/db";
 import {
   category,
   cities,
@@ -13,31 +14,42 @@ import {
 import { protectedProcedure, publicProcedure } from "../trpc";
 
 export const authRouter = {
-  getUserData: protectedProcedure.query(async ({ ctx }) => {
+  getUserProfile: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
-    try {
-      // Fetch user with city
-      const userResult = await ctx.db
-        .select({
-          id: userTable.id,
-          name: userTable.name,
-          image: userTable.image,
-          email: userTable.email,
-          createdAt: userTable.createdAt,
-          // cityName: cities.name,
-        })
-        .from(userTable)
-        // .leftJoin(cities, eq(cities.id, userTable.cityId)) // assuming user.cityId exists
-        .where(eq(userTable.id, userId))
-        .limit(1)
-        .execute();
+    const result = await ctx.db
+      .select({
+        id: userTable.id,
+        name: userTable.name,
+        image: userTable.image,
+        email: userTable.email,
+        createdAt: userTable.createdAt,
+        city: cities.name,
+        cityId: userTable.cityId,
+        phoneVerified: userTable.phoneVerified,
+        bio: userTable.bio,
+      })
+      .from(userTable)
+      .leftJoin(cities, eq(cities.id, userTable.cityId))
+      .where(eq(userTable.id, userId))
+      .limit(1);
 
-      const user = userResult[0];
-      if (!user) throw new Error("User not found");
+    const user = result[0];
+    if (!user) throw new Error("User not found");
 
-      // Fetch user's listings with main image
-      const listingsResult = await ctx.db
+    return {
+      ...user,
+      city: user.city ?? "India",
+      bio: user.bio ?? "",
+    };
+  }),
+
+  getUserListings: protectedProcedure
+    .input(z.object({ limit: z.number().min(1).max(100).default(50) }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const listings = await ctx.db
         .select({
           id: listing.id,
           title: listing.title,
@@ -51,62 +63,73 @@ export const authRouter = {
         .from(listing)
         .leftJoin(
           media,
-          and(
-            eq(media.listingId, listing.id),
-            eq(media.position, 0), // main image
-          ),
+          and(eq(media.listingId, listing.id), eq(media.position, 0)),
         )
         .leftJoin(cities, eq(cities.id, listing.cityId))
         .leftJoin(category, eq(category.id, listing.categoryId))
         .where(eq(listing.userId, userId))
-        .orderBy(listing.createdAt)
-        .limit(50)
-        .execute();
+        .orderBy(desc(listing.createdAt))
+        .limit(input.limit);
 
-      // Fetch user's favourites with listing details and image
-      const favouritesResult = await ctx.db
-        .select({
-          id: favourite.listingId,
-          title: listing.title,
-          price: listing.price,
-          imageUrl: media.url,
-        })
-        .from(favourite)
-        .innerJoin(listing, eq(listing.id, favourite.listingId))
-        .leftJoin(
-          media,
-          and(eq(media.listingId, listing.id), eq(media.position, 0)),
-        )
-        .where(eq(favourite.userId, userId))
-        .execute();
+      return listings.map((l) => ({
+        ...l,
+        price: Number(l.price),
+        status: l.status,
+      }));
+    }),
 
-      return {
-        id: user.id,
-        name: user.name,
-        image: user.image,
-        email: user.email,
-        // city: user.cityName || "India", // fallback
-        createdAt: user.createdAt,
-        isVerified: false,
-        totalListings: listingsResult.length,
-        totalFavourites: favouritesResult.length,
-        averageRating: 4.8, // placeholder
-        listings: listingsResult.map((l) => ({
-          ...l,
-          status: l.status as "active" | "sold" | "draft",
-        })),
-        favourites: favouritesResult.map((f) => ({
-          id: f.id,
-          title: f.title,
-          price: Number(f.price),
-          imageUrl: f.imageUrl,
-        })),
-      };
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      throw new Error("Failed to load user data");
-    }
+  getUserFavourites: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const favourites = await ctx.db
+      .select({
+        id: favourite.listingId,
+        title: listing.title,
+        price: listing.price,
+        imageUrl: media.url,
+      })
+      .from(favourite)
+      .innerJoin(listing, eq(listing.id, favourite.listingId))
+      .leftJoin(
+        media,
+        and(eq(media.listingId, listing.id), eq(media.position, 0)),
+      )
+      .where(eq(favourite.userId, userId));
+
+    return favourites.map((f) => ({
+      id: f.id,
+      title: f.title,
+      price: Number(f.price),
+      imageUrl: f.imageUrl,
+    }));
   }),
+
+  updateUserProfile: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(100).optional(),
+        bio: z.string().max(280).optional(),
+        cityId: z.number().optional(),
+        image: z.url().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const { name, bio, cityId, image } = input;
+
+      await ctx.db
+        .update(userTable)
+        .set({
+          name: name?.trim() ? name.trim() : undefined,
+          bio: bio?.trim() ? bio.trim() : undefined,
+          cityId: cityId ?? undefined,
+          image: image?.trim() ? image.trim() : undefined,
+        })
+        .where(eq(userTable.id, userId));
+
+      return { success: true };
+    }),
 
   getSession: publicProcedure.query(({ ctx }) => {
     return ctx.session;

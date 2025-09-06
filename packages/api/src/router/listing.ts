@@ -1,5 +1,5 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import { and, desc, eq, gte, ilike, lte, or } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import {
@@ -110,7 +110,11 @@ export const listingRouter = {
         )
         .leftJoin(cities, eq(cities.id, listing.cityId))
         .leftJoin(category, eq(category.id, listing.categoryId))
-        .where(filters.length ? and(...filters) : undefined)
+        .where(
+          filters.length
+            ? and(...filters, eq(listing.status, "active"))
+            : eq(listing.status, "active"),
+        )
         .orderBy(desc(listing.createdAt))
         .limit(limit + 1)
         .offset(cursor)
@@ -240,6 +244,7 @@ export const listingRouter = {
               image: user.image,
               createdAt: user.createdAt,
             },
+            viewCount: listing.viewCount,
             title: listing.title,
             description: listing.description,
             price: listing.price,
@@ -259,7 +264,7 @@ export const listingRouter = {
           .leftJoin(model, eq(model.id, listing.modelId))
           .leftJoin(cities, eq(cities.id, listing.cityId))
           .leftJoin(category, eq(category.id, listing.categoryId))
-          .where(eq(listing.id, listingId))
+          .where(and(eq(listing.id, listingId), eq(listing.status, "active")))
           .limit(1)
           .execute();
 
@@ -296,13 +301,13 @@ export const listingRouter = {
       const listingData = listingResult[0];
       if (!listingData) return null;
 
-      // await ctx.db
-      //   .update(listing)
-      //   .set({
-      //     viewCount: sql`${listing.viewCount} + 1`,
-      //   })
-      //   .where(eq(listing.id, listingId))
-      //   .execute();
+      await ctx.db
+        .update(listing)
+        .set({
+          viewCount: sql`${listingData.viewCount} + 1`,
+        })
+        .where(eq(listing.id, listingId))
+        .execute();
 
       return {
         ...listingData,

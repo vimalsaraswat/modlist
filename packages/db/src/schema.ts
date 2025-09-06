@@ -9,3 +9,4 @@ export * from "./tables/waitlist";
 export * from "./tables/forum";
 export * from "./tables/media";
 export * from "./tables/garage";
+export * from "./tables/audit";
