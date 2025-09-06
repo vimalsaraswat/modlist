@@ -1,13 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { CarIcon, FilterIcon, MapIcon, TagIcon, X } from "lucide-react";
+import {
+  CarIcon,
+  FilterIcon,
+  IndianRupeeIcon,
+  MapIcon,
+  TagIcon,
+  X,
+} from "lucide-react";
 
 import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
+import { Input } from "@acme/ui/input";
 import { Label } from "@acme/ui/label";
 import {
   Sheet,
@@ -21,11 +29,19 @@ import {
 import { useTRPC } from "~/trpc/react";
 import Combobox from "../common/combobox";
 
+interface Badge {
+  label: string;
+  onClear: () => void;
+  color: string;
+}
+
 const defaultFilters = {
   category: "all",
   makeId: -1,
   modelId: -1,
   city: -1,
+  minPrice: "",
+  maxPrice: "",
 };
 
 const Filters = () => {
@@ -34,16 +50,28 @@ const Filters = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Grouped state
   const [filters, setFilters] = useState({
     category: searchParams.get("category") ?? "all",
     makeId: Number(searchParams.get("make")) || -1,
     modelId: Number(searchParams.get("model")) || -1,
     city: Number(searchParams.get("city")) || -1,
+    minPrice: searchParams.get("minPrice") ?? "",
+    maxPrice: searchParams.get("maxPrice") ?? "",
   });
 
+  const currentFilters = useMemo(
+    () => ({
+      category: searchParams.get("category") ?? "all",
+      makeId: Number(searchParams.get("make")) || -1,
+      modelId: Number(searchParams.get("model")) || -1,
+      city: Number(searchParams.get("city")) || -1,
+      minPrice: searchParams.get("minPrice") ?? "",
+      maxPrice: searchParams.get("maxPrice") ?? "",
+    }),
+    [searchParams],
+  );
+
   const [isOpen, setIsOpen] = useState(false);
-  const skipEffectRef = useRef(false);
 
   // Fetch static options
   const { data: categories = [] } = useQuery(
@@ -51,7 +79,6 @@ const Filters = () => {
   );
   const { data: makes = [] } = useQuery(trpc.listing.makeList.queryOptions());
   const { data: cities = [] } = useQuery(trpc.listing.cityList.queryOptions());
-
   const { data: models = [] } = useQuery(
     trpc.listing.modelListByMake.queryOptions(
       { makeId: Number(filters.makeId) },
@@ -59,39 +86,68 @@ const Filters = () => {
     ),
   );
 
-  const updateFilters = useCallback(() => {
+  const filtersChanged = useMemo(() => {
+    return (
+      filters.category !== currentFilters.category ||
+      filters.makeId !== currentFilters.makeId ||
+      filters.modelId !== currentFilters.modelId ||
+      filters.city !== currentFilters.city ||
+      filters.minPrice !== currentFilters.minPrice ||
+      filters.maxPrice !== currentFilters.maxPrice
+    );
+  }, [filters, currentFilters]);
+
+  const applyFilters = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
-    if (filters.category !== "all") params.set("category", filters.category);
-    if (filters.makeId !== -1) params.set("make", String(filters.makeId));
 
-    if (filters.makeId !== -1 && filters.modelId !== -1)
-      params.set("model", String(filters.modelId));
+    const rules: {
+      key: keyof typeof filters;
+      param: string;
+    }[] = [
+      { key: "category", param: "category" },
+      { key: "makeId", param: "make" },
+      { key: "modelId", param: "model" },
+      { key: "city", param: "city" },
+      { key: "minPrice", param: "minPrice" },
+      { key: "maxPrice", param: "maxPrice" },
+    ];
 
-    if (filters.city !== -1) params.set("city", String(filters.city));
+    rules.forEach(({ key, param }) => {
+      const val = filters[key];
+      const def = defaultFilters[key];
+      if (val !== def && val !== "" && val !== -1) {
+        params.set(param, String(val));
+      } else {
+        params.delete(param);
+      }
+    });
+
+    // special rule: if makeId is reset, clear model as well
+    if (filters.makeId === -1) {
+      params.delete("model");
+    }
 
     const queryStr = params.toString();
     router.replace(queryStr ? `${pathname}?${queryStr}` : pathname, {
       scroll: false,
     });
-  }, [filters, pathname, router]);
+
+    setIsOpen(false);
+  }, [filters, pathname, router, searchParams]);
 
   const clearFilters = () => {
-    skipEffectRef.current = true;
     setFilters(defaultFilters);
     router.replace(pathname, { scroll: false });
   };
 
-  useEffect(() => {
-    if (skipEffectRef.current) {
-      skipEffectRef.current = false;
-      return;
-    }
-    updateFilters();
-  }, [filters, updateFilters]);
-
   const hasActiveFilters = useMemo(() => {
     return (
-      filters.category !== "all" || filters.makeId !== -1 || filters.city !== -1
+      filters.category !== "all" ||
+      filters.makeId !== -1 ||
+      filters.modelId !== -1 ||
+      filters.city !== -1 ||
+      filters.minPrice !== "" ||
+      filters.maxPrice !== ""
     );
   }, [filters]);
 
@@ -101,6 +157,8 @@ const Filters = () => {
       filters.makeId !== -1 ? filters.makeId : null,
       filters.modelId !== -1 ? filters.modelId : null,
       filters.city !== -1 ? filters.city : null,
+      filters.minPrice ? filters.minPrice : null,
+      filters.maxPrice ? filters.maxPrice : null,
     ].filter(Boolean).length;
   }, [filters]);
 
@@ -116,33 +174,91 @@ const Filters = () => {
     [],
   );
 
-  const badges = [
-    getNameById(filters.category, categories) && {
-      label: getNameById(filters.category, categories),
-      onClear: () => setFilters((f) => ({ ...f, category: "all" })),
+  const categoryName = getNameById(filters.category, categories);
+  const makeName = getNameById(filters.makeId, makes);
+  const modelName = getNameById(filters.modelId, models);
+  const cityName = getNameById(filters.city, cities);
+
+  console.log({ filtersChanged });
+  console.table([currentFilters, filters]);
+
+  const clearFilter = useCallback(
+    (key: keyof typeof filters, defaultValue: string | number = "") => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      switch (key) {
+        case "category":
+          params.delete("category");
+          break;
+        case "makeId":
+          params.delete("make");
+          params.delete("model");
+          break;
+        case "modelId":
+          params.delete("model");
+          break;
+        case "city":
+          params.delete("city");
+          break;
+        case "minPrice":
+          params.delete("minPrice");
+          break;
+        case "maxPrice":
+          params.delete("maxPrice");
+          break;
+      }
+
+      const queryStr = params.toString();
+      router.replace(queryStr ? `${pathname}?${queryStr}` : pathname, {
+        scroll: false,
+      });
+
+      setFilters((f) => ({ ...f, [key]: defaultValue }));
+    },
+    [pathname, router, searchParams],
+  );
+
+  const badges: Badge[] = [
+    !!categoryName && {
+      label: categoryName,
+      onClear: () => clearFilter("category", "all"),
       color: "blue",
     },
-    getNameById(filters.makeId, makes) && {
-      label: getNameById(filters.makeId, makes),
-      onClear: () => setFilters((f) => ({ ...f, makeId: -1 })),
+    !!makeName && {
+      label: makeName,
+      onClear: () => {
+        clearFilter("makeId", -1);
+        clearFilter("modelId", -1);
+      },
       color: "green",
     },
-    getNameById(filters.modelId, makes) && {
-      label: getNameById(filters.modelId, makes),
-      onClear: () => setFilters((f) => ({ ...f, modelId: -1 })),
+    !!modelName && {
+      label: modelName,
+      onClear: () => clearFilter("modelId", -1),
       color: "green",
     },
-    getNameById(filters.city, cities) && {
-      label: getNameById(filters.city, cities),
-      onClear: () => setFilters((f) => ({ ...f, city: -1 })),
+    !!cityName && {
+      label: cityName,
+      onClear: () => clearFilter("city", -1),
       color: "green",
     },
-  ].filter(Boolean);
+    !!filters.minPrice && {
+      label: `Min: ${filters.minPrice}`,
+      onClear: () => clearFilter("minPrice", ""),
+      color: "yellow",
+    },
+    !!filters.maxPrice && {
+      label: `Max: ${filters.maxPrice}`,
+      onClear: () => clearFilter("maxPrice", ""),
+      color: "yellow",
+    },
+  ].filter((badge): badge is Badge => Boolean(badge));
 
   const filterFields = [
     {
       icon: <TagIcon className="h-4 w-4 text-zinc-400" />,
       label: "Category",
+      type: "combobox" as const,
       value: filters.category,
       onChange: (v: string) => setFilters((f) => ({ ...f, category: v })),
       options: [
@@ -153,6 +269,7 @@ const Filters = () => {
     {
       icon: <CarIcon className="h-4 w-4 text-zinc-400" />,
       label: "Make",
+      type: "combobox" as const,
       value: String(filters.makeId),
       onChange: (v: string) =>
         setFilters((f) => ({
@@ -168,6 +285,7 @@ const Filters = () => {
     {
       icon: <CarIcon className="h-4 w-4 text-zinc-400" />,
       label: "Model",
+      type: "combobox" as const,
       value: String(filters.modelId),
       onChange: (v: string) =>
         setFilters((f) => ({ ...f, modelId: Number(v) })),
@@ -179,6 +297,7 @@ const Filters = () => {
     {
       icon: <MapIcon className="h-4 w-4 text-zinc-400" />,
       label: "City",
+      type: "combobox" as const,
       value: String(filters.city),
       onChange: (v: string) => setFilters((f) => ({ ...f, city: Number(v) })),
       options: [
@@ -186,75 +305,21 @@ const Filters = () => {
         ...cities.map((c) => ({ label: c.name, value: String(c.id) })),
       ],
     },
+    {
+      icon: <IndianRupeeIcon className="h-4 w-4 text-zinc-400" />,
+      label: "Min Price",
+      type: "input" as const,
+      value: filters.minPrice,
+      onChange: (v: string) => setFilters((f) => ({ ...f, minPrice: v })),
+    },
+    {
+      icon: <IndianRupeeIcon className="h-4 w-4 text-zinc-400" />,
+      label: "Max Price",
+      type: "input" as const,
+      value: filters.maxPrice,
+      onChange: (v: string) => setFilters((f) => ({ ...f, maxPrice: v })),
+    },
   ];
-
-  const ActiveFilters = () => (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between text-sm">
-        <div />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearFilters}
-          className="h-6 px-2 text-xs"
-        >
-          Clear All
-        </Button>
-      </div>
-      <div className="flex max-w-80 flex-wrap gap-2">
-        {badges.map((badge, i) => {
-          if (!badge) return;
-          return (
-            <Badge
-              key={i}
-              variant="secondary"
-              className={`border-${badge.color}-500/20 bg-${badge.color}-500/10 text-${badge.color}-300`}
-            >
-              {badge.label}
-              <button onClick={badge.onClear} className="ml-1 hover:text-white">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  const FilterSection = () => (
-    <div className="space-y-6">
-      {hasActiveFilters && <ActiveFilters />}
-
-      {filterFields.map((field, i) => (
-        <div className="flex flex-col gap-2" key={i}>
-          <div className="flex items-center gap-2">
-            {field.icon}
-            <Label>{field.label}</Label>
-          </div>
-          <Combobox
-            value={field.value}
-            onChange={field.onChange}
-            options={field.options}
-            placeholder={`Select ${field.label.toLowerCase()}`}
-          />
-          {/* <Select value={field.value} onValueChange={field.onChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue
-                placeholder={`Select ${field.label.toLowerCase()}`}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select> */}
-        </div>
-      ))}
-    </div>
-  );
 
   return (
     <>
@@ -271,7 +336,21 @@ const Filters = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <FilterSection />
+            <FilterSection
+              hasActiveFilters={hasActiveFilters}
+              badges={badges}
+              clearFilters={clearFilters}
+              filterFields={filterFields}
+            />
+            <div className="mt-6">
+              <Button
+                className="w-full"
+                disabled={!filtersChanged}
+                onClick={applyFilters}
+              >
+                Apply Filters
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </aside>
@@ -290,7 +369,7 @@ const Filters = () => {
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="max-h-dvh w-full space-y-2 overflow-auto pt-2 backdrop-blur-md"
+              className="flex max-h-dvh w-full flex-col gap-2 overflow-auto backdrop-blur-md"
             >
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
@@ -298,13 +377,28 @@ const Filters = () => {
                   Filter Parts
                 </SheetTitle>
               </SheetHeader>
-              <div className="py-10">
-                <FilterSection />
+              <div className="flex-1 overflow-auto py-2">
+                <FilterSection
+                  hasActiveFilters={hasActiveFilters}
+                  badges={badges}
+                  clearFilters={clearFilters}
+                  filterFields={filterFields}
+                />
               </div>
-
-              <SheetFooter className="bottom-0">
-                <Button onClick={() => setIsOpen(false)} variant="secondary">
-                  View Results
+              <SheetFooter className="bottom-0 flex-row items-center gap-2">
+                <Button
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  disabled={!filtersChanged}
+                  className="flex-1"
+                  onClick={applyFilters}
+                >
+                  Apply Filters
                 </Button>
               </SheetFooter>
             </SheetContent>
@@ -314,5 +408,93 @@ const Filters = () => {
     </>
   );
 };
+
+const ActiveFilters = ({
+  clearFilters,
+  badges,
+}: {
+  clearFilters: () => void;
+  badges: {
+    label: string;
+    onClear: () => void;
+    color: string;
+  }[];
+}) => (
+  <div className="space-y-3">
+    <div className="flex items-center justify-between text-sm">
+      <div />
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={clearFilters}
+        className="h-6 px-2 text-xs"
+      >
+        Clear All
+      </Button>
+    </div>
+    <div className="flex max-w-80 flex-wrap gap-2">
+      {badges.map((badge, i) => (
+        <Badge
+          key={i}
+          variant="secondary"
+          className={`border-${badge.color}-500/20 bg-${badge.color}-500/10 text-${badge.color}-300`}
+        >
+          {badge.label}
+          <button onClick={badge.onClear} className="ml-1 hover:text-white">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+    </div>
+  </div>
+);
+
+const FilterSection = ({
+  hasActiveFilters,
+  badges,
+  clearFilters,
+  filterFields,
+}: {
+  hasActiveFilters: boolean;
+  badges: { label: string; onClear: () => void; color: string }[];
+  clearFilters: () => void;
+  filterFields: {
+    icon: React.ReactNode;
+    label: string;
+    type: "combobox" | "input";
+    value: string;
+    onChange: (v: string) => void;
+    options?: { label: string; value: string }[];
+  }[];
+}) => (
+  <section className="space-y-6">
+    {hasActiveFilters && (
+      <ActiveFilters clearFilters={clearFilters} badges={badges} />
+    )}
+    {filterFields.map((field, i) => (
+      <div className="flex flex-col gap-2" key={i}>
+        <div className="flex items-center gap-2">
+          {field.icon}
+          <Label>{field.label}</Label>
+        </div>
+        {field.type === "combobox" ? (
+          <Combobox
+            value={field.value}
+            onChange={field.onChange}
+            options={field.options ?? []}
+            placeholder={`Select ${field.label.toLowerCase()}`}
+          />
+        ) : (
+          <Input
+            type="number"
+            value={field.value}
+            onChange={(e) => field.onChange(e.target.value)}
+            placeholder={`Enter ${field.label.toLowerCase()}`}
+          />
+        )}
+      </div>
+    ))}
+  </section>
+);
 
 export default Filters;

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@acme/ui";
@@ -28,8 +29,10 @@ export default function Combobox({
   onChange: (value: string) => void;
   placeholder: string;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Popover modal={true}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="secondary"
@@ -54,6 +57,7 @@ export default function Combobox({
                   key={option.value}
                   onSelect={() => {
                     onChange(option.value);
+                    setOpen(false);
                   }}
                 >
                   {option.label}

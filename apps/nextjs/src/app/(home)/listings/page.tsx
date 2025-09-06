@@ -16,23 +16,32 @@ export default async function ListingsPage({
     make?: string;
     city?: string;
     query?: string;
+    model?: string;
+    minPrice?: string;
+    maxPrice?: string;
   }>;
 }) {
-  const { category, make, query, city } = await searchParams;
+  const { category, make, model, city, minPrice, maxPrice, query } =
+    await searchParams;
+
   const categoryId =
     category && !isNaN(Number(category)) ? Number(category) : undefined;
   const makeId = make && !isNaN(Number(make)) ? Number(make) : undefined;
+  const modelId = model && !isNaN(Number(model)) ? Number(model) : undefined;
   const cityId = city && !isNaN(Number(city)) ? Number(city) : undefined;
 
-  // prefetch(
-  //   trpc.listing.list.infiniteQueryOptions({
-  //     limit: 20,
-  //     categoryId,
-  //     makeId,
-  //     cityId,
-  //     keyword: query,
-  //   }),
-  // );
+  prefetch(
+    trpc.listing.list.infiniteQueryOptions({
+      limit: 20,
+      categoryId,
+      makeId,
+      modelId,
+      cityId,
+      priceMin: minPrice ? Number(minPrice) : undefined,
+      priceMax: maxPrice ? Number(maxPrice) : undefined,
+      keyword: query,
+    }),
+  );
 
   return (
     <HydrateClient>
