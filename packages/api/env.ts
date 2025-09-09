@@ -1,8 +1,11 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod/v4";
 
+import { emailEnv } from "@acme/email/env";
+
 export function apiEnv() {
   return createEnv({
+    extends: [emailEnv()],
     server: {
       AWS_ACCESS_KEY_ID: z.string().min(1),
       AWS_SECRET_ACCESS_KEY: z.string().min(1),

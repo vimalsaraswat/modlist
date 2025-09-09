@@ -1,8 +1,11 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod/v4";
 
+import { emailEnv } from "@acme/email/env";
+
 export function authEnv() {
   return createEnv({
+    extends: [emailEnv()],
     server: {
       AUTH_GOOGLE_ID: z.string().min(1),
       AUTH_GOOGLE_SECRET: z.string().min(1),

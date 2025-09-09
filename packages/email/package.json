@@ -1,13 +1,10 @@
 {
-  "name": "@acme/api",
-  "version": "0.1.0",
+  "name": "@acme/email",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
-    },
+    ".": "./src/index.ts",
     "./env": "./env.ts"
   },
   "license": "MIT",
@@ -19,24 +16,17 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
-  "dependencies": {
-    "@acme/auth": "workspace:*",
-    "@acme/db": "workspace:*",
-    "@acme/email": "workspace:*",
-    "@acme/validators": "workspace:*",
-    "@aws-sdk/client-s3": "^3.842.0",
-    "@aws-sdk/s3-request-presigner": "^3.842.0",
-    "@trpc/server": "catalog:",
-    "superjson": "2.2.2",
-    "zod": "catalog:"
-  },
   "devDependencies": {
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@types/nodemailer": "^6.4.17",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@acme/prettier-config",
+  "dependencies": {
+    "nodemailer": "^7.0.5"
+  }
 }
