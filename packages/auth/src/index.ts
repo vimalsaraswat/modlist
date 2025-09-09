@@ -2,9 +2,10 @@ import type { BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy } from "better-auth/plugins";
+import { emailOTP, oAuthProxy, phoneNumber } from "better-auth/plugins";
 
 import { db } from "@acme/db/client";
+import { sendEmail } from "@acme/email";
 
 export function initAuth(options: {
   baseUrl: string;
@@ -18,6 +19,14 @@ export function initAuth(options: {
     database: drizzleAdapter(db, {
       provider: "pg",
     }),
+    user: {
+      additionalFields: {
+        role: {
+          type: "string",
+          input: false,
+        },
+      },
+    },
     baseURL: options.baseUrl,
     secret: options.secret,
     // advanced: {
@@ -32,6 +41,36 @@ export function initAuth(options: {
         productionURL: options.productionUrl,
       }),
       expo(),
+      emailOTP({
+        async sendVerificationOTP({ email, otp, type }) {
+          if (type === "sign-in") {
+            await sendEmail({
+              to: email,
+              subject: "Your sign-in code for MODLIST",
+              html: `<p>Your sign-in code is <strong>${otp}</strong>.</p><p>This code is valid for a short period. Do not share it with anyone.</p>`,
+              text: `Your sign-in code is ${otp}. This code is valid for a short period. Do not share it with anyone.`,
+            });
+          } else if (type === "email-verification") {
+            // Send the OTP for email verification
+          } else {
+            // Send the OTP for password reset
+          }
+        },
+      }),
+      phoneNumber({
+        allowedAttempts: 8,
+        sendOTP: ({ phoneNumber, code }, request) => {
+          // Implement sending OTP code via SMS
+          console.log(
+            "Sending OTP to phone number:",
+            phoneNumber,
+            "with code:",
+            code,
+            "and request:",
+            request,
+          );
+        },
+      }),
     ],
     socialProviders: {
       google: {
