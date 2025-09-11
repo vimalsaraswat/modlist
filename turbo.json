@@ -62,7 +62,10 @@
     "SMTP_PORT",
     "SMTP_USER",
     "SMTP_PASS",
-    "SMTP_FROM_EMAIL"
+    "SMTP_FROM_EMAIL",
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_AUTH_TOKEN",
+    "TWILIO_FROM_PHONE_NUMBER"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
