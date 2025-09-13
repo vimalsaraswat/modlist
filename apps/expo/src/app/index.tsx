@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { Redirect } from "expo-router";
+import { useEffect } from "react";
+import { Pressable, SafeAreaView, Text, View } from "react-native";
+import { Redirect, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
 import { authClient } from "~/utils/auth";
@@ -9,6 +9,7 @@ void SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const { data: session, isPending } = authClient.useSession();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isPending) {
@@ -16,50 +17,33 @@ export default function App() {
     }
   }, [isPending]);
 
-  if (isPending) {
-    return null;
-  }
-
+  if (isPending) return null;
   if (session) {
+    const user = session.user;
+
+    const isProfileIncomplete =
+      !user.phoneNumber ||
+      !user.phoneNumberVerified ||
+      !user.name || // you can add more fields as required
+      !user.image;
+
+    if (isProfileIncomplete) {
+      return <Redirect href="/onboarding" />;
+    }
     return <Redirect href="/(tabs)/listings" />;
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <HomeScreen />
-    </View>
-  );
-}
-
-function HomeScreen() {
-  const [signInLoading, setSignInLoading] = useState(false);
-
-  const handleSignIn = async () => {
-    try {
-      setSignInLoading(true);
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
-    } catch (error) {
-      console.error("Sign in failed:", error);
-    } finally {
-      setSignInLoading(false);
-    }
-  };
-
-  return (
-    <View className="flex-1 bg-background">
-      {/* Hero Section */}
-
+    <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 items-center justify-center px-6">
-        <View className="mb-12 items-center">
-          <View className="mb-6 h-24 w-24 items-center justify-center rounded-2xl bg-primary">
+        {/* Brand Logo */}
+        <View className="mb-10 items-center">
+          <View className="mb-6 h-24 w-24 items-center justify-center rounded-2xl bg-primary shadow-lg">
             <Text className="text-3xl font-bold text-primary-foreground">
               M
             </Text>
           </View>
-          <Text className="mb-2 text-center text-4xl font-bold text-foreground">
+          <Text className="mb-2 text-center text-4xl font-extrabold text-foreground">
             Modlist
           </Text>
           <Text className="text-center text-lg text-muted-foreground">
@@ -67,64 +51,29 @@ function HomeScreen() {
           </Text>
         </View>
 
-        {/* Features */}
-        <View className="mb-12 w-full">
-          <View className="mb-4 flex-row items-center px-4">
-            <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-accent">
-              <Text className="text-sm text-accent-foreground">🚗</Text>
-            </View>
-            <Text className="text-base text-foreground">
-              Browse thousands of car parts and modifications
-            </Text>
-          </View>
-          <View className="mb-4 flex-row items-center px-4">
-            <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-accent">
-              <Text className="text-sm text-accent-foreground">💬</Text>
-            </View>
-            <Text className="text-base text-foreground">
-              Chat directly with sellers and enthusiasts
-            </Text>
-          </View>
-          <View className="mb-4 flex-row items-center px-4">
-            <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-accent">
-              <Text className="text-sm text-accent-foreground">⭐</Text>
-            </View>
-            <Text className="text-base text-foreground">
-              Save your favorite parts and builds
-            </Text>
-          </View>
-        </View>
+        {/* Hero Illustration (optional) */}
+        {/*<Image
+          source={require("~/assets/")} // put a car/garage illustration
+          className="mb-10 h-52 w-full"
+          resizeMode="contain"
+        />*/}
 
-        {/* Sign In Button */}
+        {/* CTA */}
         <Pressable
-          onPress={handleSignIn}
-          disabled={signInLoading}
-          className={`w-full flex-row items-center justify-center rounded-lg bg-primary p-4 ${signInLoading ? "opacity-70" : "active:opacity-90"}`}
+          onPress={() => router.push("/sign-in")}
+          className="w-full items-center justify-center rounded-xl bg-primary p-4 active:opacity-90"
         >
-          {signInLoading ? (
-            <>
-              <ActivityIndicator size="small" color="#fff" />
-              <Text className="ml-2 text-base font-semibold text-primary-foreground">
-                Signing In...
-              </Text>
-            </>
-          ) : (
-            <>
-              <View className="mr-3 h-6 w-6 items-center justify-center rounded bg-white">
-                <Text className="text-xs font-bold text-primary">G</Text>
-              </View>
-              <Text className="text-base font-semibold text-primary-foreground">
-                Continue with Google
-              </Text>
-            </>
-          )}
+          <Text className="text-lg font-semibold text-primary-foreground">
+            Get Started
+          </Text>
         </Pressable>
 
-        <Text className="mt-6 px-4 text-center text-sm text-muted-foreground">
+        {/* Small footer */}
+        <Text className="mt-6 px-6 text-center text-xs text-muted-foreground">
           Join thousands of automotive enthusiasts sharing their builds and
           finding parts
         </Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }

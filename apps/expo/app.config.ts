@@ -54,5 +54,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "Allow Modlist to access your photos to add images to your lists or profile.",
+      },
+    ],
   ],
 });

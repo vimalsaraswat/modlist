@@ -61,6 +61,7 @@
     "@acme/prettier-config": "workspace:*",
     "@acme/tailwind-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@acme/validators": "workspace:*",
     "@babel/core": "^7.27.4",
     "@babel/plugin-transform-async-generator-functions": "^7.28.0",
     "@babel/preset-env": "^7.27.2",
