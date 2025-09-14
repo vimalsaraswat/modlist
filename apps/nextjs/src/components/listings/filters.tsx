@@ -179,9 +179,6 @@ const Filters = () => {
   const modelName = getNameById(filters.modelId, models);
   const cityName = getNameById(filters.city, cities);
 
-  console.log({ filtersChanged });
-  console.table([currentFilters, filters]);
-
   const clearFilter = useCallback(
     (key: keyof typeof filters, defaultValue: string | number = "") => {
       const params = new URLSearchParams(searchParams.toString());
