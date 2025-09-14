@@ -3,6 +3,7 @@ import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
+  createAuthMiddleware,
   emailOTP,
   oAuthProxy,
   openAPI,
@@ -12,6 +13,8 @@ import {
 import { db } from "@acme/db/client";
 import { sendEmail } from "@acme/email";
 import { sendSMS } from "@acme/message";
+
+import { welcomeEmailHtml, welcomeEmailText } from "./welcome-email";
 
 export function initAuth(options: {
   baseUrl: string;
@@ -63,6 +66,39 @@ export function initAuth(options: {
         trustedProviders: ["google"],
       },
     },
+    hooks: {
+      after: createAuthMiddleware(async (ctx) => {
+        const newSession = ctx.context.newSession;
+
+        if (newSession) {
+          const now = new Date();
+          const userCreationDate = new Date(newSession.user.createdAt);
+          const timeDifference = now.getTime() - userCreationDate.getTime();
+
+          // 5000ms = 5s
+          if (timeDifference < 5000) {
+            const html = welcomeEmailHtml(
+              newSession.user.name.trim()
+                ? newSession.user.name
+                : newSession.user.email,
+              options.baseUrl,
+            );
+            const text = welcomeEmailText(
+              newSession.user.name.trim()
+                ? newSession.user.name
+                : newSession.user.email,
+              options.baseUrl,
+            );
+            await sendEmail({
+              to: newSession.user.email,
+              subject: "Welcome to MODLIST",
+              html,
+              text,
+            });
+          }
+        }
+      }),
+    },
     plugins: [
       oAuthProxy({
         /**
@@ -97,20 +133,20 @@ export function initAuth(options: {
       phoneNumber({
         sendOTP: async ({ phoneNumber, code }) => {
           await sendSMS({
-            body: `MODLIST: Your verification code is ${code}. It’s valid for 5 minutes. Do not share this code with anyone.`,
-            to: "+91" + phoneNumber,
+            body: `MODLIST verification code is ${code}`,
+            to: phoneNumber.startsWith("+") ? phoneNumber : `+91${phoneNumber}`,
           });
         },
-        signUpOnVerification: {
-          getTempEmail: () => {
-            // ${phoneNumber}@my-site.com
-            return "";
-          },
+        // signUpOnVerification: {
+        //   getTempEmail: () => {
+        //     // ${phoneNumber}@my-site.com
+        //     return "";
+        //   },
 
-          getTempName: (phoneNumber) => {
-            return phoneNumber;
-          },
-        },
+        //   getTempName: (phoneNumber) => {
+        //     return phoneNumber;
+        //   },
+        // },
       }),
     ],
     emailVerification: {
