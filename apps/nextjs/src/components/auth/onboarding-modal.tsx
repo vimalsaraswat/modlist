@@ -78,8 +78,8 @@ export default function OnboardingDialog() {
     if (!isLoading && user) {
       // Check for an incomplete profile. A profile is incomplete if any of these are missing:
       // name, image, or phone number verification.
-      const incompleteProfile =
-        !user.name || !user.image || !user.phoneNumberVerified;
+      const incompleteProfile = !user.name || !user.image;
+      // || !user.phoneNumberVerified;
 
       // If the profile is incomplete, open the dialog.
       // Otherwise, ensure it is closed.
@@ -205,6 +205,7 @@ export default function OnboardingDialog() {
         name: name.trim(),
         image: uploadedUrl ?? undefined,
       });
+      setOpen(false);
     } catch (err) {
       toast.error("Failed to update profile.");
     } finally {
