@@ -3,7 +3,7 @@ import { Skeleton } from "@acme/ui/skeleton";
 
 export default function ListingDetailLoading() {
   return (
-    <main className="h-[calc(100dvh-4rem)]">
+    <main className="h-[calc(100dvh-4rem)] min-h-dvh">
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-accent/5"></div>
         <div className="relative mx-auto max-w-7xl px-4 py-8 lg:px-8">

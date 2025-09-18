@@ -35,6 +35,7 @@ export const listing = pgTable(
       .references(() => category.id),
     cityId: t.integer().references(() => cities.id),
     partNumber: t.varchar({ length: 20 }),
+    year: t.integer(),
     latitude: t.numeric({ precision: 9, scale: 6 }),
     longitude: t.numeric({ precision: 9, scale: 6 }),
     status: t

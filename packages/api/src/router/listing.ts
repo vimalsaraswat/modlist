@@ -264,7 +264,7 @@ export const listingRouter = {
           .leftJoin(model, eq(model.id, listing.modelId))
           .leftJoin(cities, eq(cities.id, listing.cityId))
           .leftJoin(category, eq(category.id, listing.categoryId))
-          .where(and(eq(listing.id, listingId), eq(listing.status, "active")))
+          .where(eq(listing.id, listingId))
           .limit(1)
           .execute();
 
@@ -299,7 +299,15 @@ export const listingRouter = {
       ]);
 
       const listingData = listingResult[0];
+
       if (!listingData) return null;
+      if (
+        listingData.status !== "active" &&
+        !(userId && userId === listingData.user?.id) &&
+        ctx.session?.user.role !== "admin"
+      ) {
+        return null;
+      }
 
       await ctx.db
         .update(listing)
@@ -330,6 +338,7 @@ export const listingRouter = {
         cityId: input.cityId,
         latitude: input.latitude ? String(input.latitude) : undefined,
         longitude: input.longitude ? String(input.longitude) : undefined,
+        year: input.year,
       };
 
       if (input.partNumber && input.partNumber !== "") {

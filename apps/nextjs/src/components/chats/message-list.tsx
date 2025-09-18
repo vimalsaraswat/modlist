@@ -5,15 +5,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
+import { Dialog, DialogContent, DialogTrigger } from "@acme/ui/dialog";
+
 import { useTRPC } from "~/trpc/react";
 
 interface Props {
   chatId: string;
   userId: string;
 }
+interface ProductMetadata {
+  listingId: string;
+  title: string;
+  image: string;
+  description: string;
+}
 
 export default function MessageList({ chatId, userId }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
   const trpc = useTRPC();
   const { data: messages = [], isLoading } = useQuery({
     ...trpc.chat.getMessages.queryOptions({ chatId }),
@@ -64,16 +73,47 @@ export default function MessageList({ chatId, userId }: Props) {
                 }`}
               >
                 {msg.type === "product" ? (
-                  <ProductMessage
-                    metadata={
-                      msg.metadata as {
-                        listingId: string;
-                        title: string;
-                        image: string;
-                        description: string;
-                      }
-                    }
-                  />
+                  <ProductMessage metadata={msg.metadata as ProductMetadata} />
+                ) : msg.type === "media" ? (
+                  <div className="relative">
+                    {msg.metadata?.image && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button type="button" className="focus:outline-none">
+                            <Image
+                              src={msg.metadata.image}
+                              alt={msg.text ?? "Image"}
+                              width={240}
+                              height={240}
+                              className="max-h-60 w-auto rounded-lg object-cover"
+                            />
+                          </button>
+                        </DialogTrigger>
+
+                        <DialogContent className="max-h-[90vh] max-w-[90vw] border-0 bg-transparent p-0 shadow-none">
+                          <div className="flex items-center justify-center">
+                            <Image
+                              src={msg.metadata.image}
+                              alt={msg.text ?? "Preview"}
+                              width={1200}
+                              height={1200}
+                              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                    {msg.text && (
+                      <p className="mt-1 text-sm text-foreground">{msg.text}</p>
+                    )}
+                    <div className="mt-1 text-right text-xs text-muted-foreground">
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
+                    </div>
+                  </div>
                 ) : (
                   <>
                     {msg.text}
@@ -114,16 +154,7 @@ function formatDateLabel(date: Date) {
   });
 }
 
-function ProductMessage({
-  metadata,
-}: {
-  metadata: {
-    listingId: string;
-    title: string;
-    image: string;
-    description: string;
-  };
-}) {
+function ProductMessage({ metadata }: { metadata: ProductMetadata }) {
   return (
     <Link
       href={`/listings/${metadata.listingId}`}

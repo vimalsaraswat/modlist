@@ -171,7 +171,21 @@ export const chatRouter = {
     }),
 
   sendMessage: protectedProcedure
-    .input(z.object({ chatId: z.uuid(), text: z.string().min(1) }))
+    .input(
+      z
+        .object({
+          chatId: z.uuid(),
+          text: z.string().optional(),
+          mediaUrl: z.url().optional(),
+        })
+        .refine(
+          (data) => Boolean(data.text?.trim()) || Boolean(data.mediaUrl),
+          {
+            message: "Message must include text or an image.",
+            path: ["text"],
+          },
+        ),
+    )
     .mutation(async ({ ctx, input }) => {
       const senderId = ctx.session.user.id;
       const isParticipant = await ctx.db.query.chatParticipant.findFirst({
@@ -187,8 +201,11 @@ export const chatRouter = {
         .values({
           chatId: input.chatId,
           senderId,
-          text: input.text,
-          type: "text",
+          text: input.text?.trim() ?? null,
+          type: input.mediaUrl ? "media" : "text",
+          metadata: input.mediaUrl
+            ? { image: input.mediaUrl, alt: input.text?.trim() ?? "" }
+            : undefined,
         })
         .returning();
 

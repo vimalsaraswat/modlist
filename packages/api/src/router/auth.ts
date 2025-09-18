@@ -26,6 +26,7 @@ export const authRouter = {
         createdAt: userTable.createdAt,
         city: cities.name,
         cityId: userTable.cityId,
+        phoneNumber: userTable.phoneNumber,
         phoneNumberVerified: userTable.phoneNumberVerified,
         bio: userTable.bio,
       })

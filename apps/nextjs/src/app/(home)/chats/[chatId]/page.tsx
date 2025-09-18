@@ -52,11 +52,6 @@ export default async function ChatPage({ params }: ChatPageProps) {
           <MessageList chatId={chat.id} userId={me} />
         </CardContent>
       </Card>
-      {/* <Card className="flex flex-1 flex-col">
-        <CardContent className="flex-1 space-y-4 overflow-y-auto p-4">
-          <MessageList chatId={chat.id} userId={me} />
-        </CardContent>
-      </Card> */}
 
       {/* Input */}
       <SendMessageForm chatId={chat.id} />

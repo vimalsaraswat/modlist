@@ -30,6 +30,12 @@ export const addListingSchema = z.object({
     )
     .max(MAX_FILES)
     .optional(),
+  year: z
+    .number()
+    .int()
+    .gte(1900, "Enter a valid year")
+    .lte(new Date().getFullYear(), "Year can't be in the far future")
+    .optional(),
 });
 
 // Infer input type for TypeScript

@@ -41,7 +41,10 @@ export const chatMessage = pgTable("chat_message", (t) => ({
     .notNull()
     .$type<"text" | "system" | "product" | "media" | "order">(),
   text: t.text(),
-  metadata: t.jsonb(),
+  metadata: t.jsonb().$type<
+    | { listingId: string; title: string; image: string; description: string } // product
+    | { image: string; alt?: string } // image
+  >(),
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })

@@ -241,6 +241,7 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
                 <CardContent className="space-y-4 pt-6">
                   <div className="flex items-center space-x-3">
                     <UserAvatar
+                      userId={listing.user?.id}
                       name={listing.user?.name ?? ""}
                       imageUrl={listing.user?.image}
                     />
@@ -287,8 +288,8 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
                   )}
 
                   {/* <Separator className="bg-border" /> */}
-                  <div className="space-y-4">
-                    {/* <div className="flex items-center space-x-3">
+                  {/*<div className="space-y-4">*/}
+                  {/* <div className="flex items-center space-x-3">
                       <UserAvatar
                         name={listing.user?.name ?? ""}
                         imageUrl={listing.user?.image}
@@ -307,7 +308,7 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
                         </div>
                       </div>
                     </div> */}
-                    {/* <div className="grid grid-cols-3 gap-4 text-center">
+                  {/* <div className="grid grid-cols-3 gap-4 text-center">
                       {[
                         ["Views", "127", "red-400"],
                         ["Saves", "8", "orange-400"],
@@ -323,7 +324,7 @@ export default async function ListingDetailPage({ params }: ListingPageProps) {
                         </div>
                       ))}
                     </div> */}
-                  </div>
+                  {/*</div>*/}
                 </CardContent>
               </Card>
 
