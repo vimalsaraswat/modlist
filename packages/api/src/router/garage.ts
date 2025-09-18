@@ -182,13 +182,16 @@ export const garageRouter = {
           year: garageCar.year,
           name: garageCar.name,
           description: garageCar.description,
-          images: media.url,
+          images: sql<string[]>`COALESCE(array_agg(${media.url}), '{}')`,
         })
         .from(garageCar)
         .leftJoin(make, eq(make.id, garageCar.makeId))
         .leftJoin(model, eq(model.id, garageCar.modelId))
         .leftJoin(media, eq(media.garageCarId, garageCar.id))
         .where(eq(garageCar.userId, input.userId))
+        .groupBy(garageCar.id, make.name, model.name)
+        .orderBy(desc(garageCar.createdAt))
+        .limit(4)
         .execute();
     }),
 } satisfies TRPCRouterRecord;
