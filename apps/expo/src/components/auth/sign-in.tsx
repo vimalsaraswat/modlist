@@ -221,7 +221,7 @@ export default function SignInScreen() {
     try {
       setLoading("phone-send");
       const { data, error: apiError } = await authClient.phoneNumber.sendOtp({
-        phoneNumber: "+91" + phone,
+        phoneNumber: phone,
       });
       if (apiError) throw apiError;
       if (data) {
@@ -257,7 +257,7 @@ export default function SignInScreen() {
     try {
       setLoading("phone-verify");
       const { data, error: apiError } = await authClient.phoneNumber.verify({
-        phoneNumber: "+91" + phone,
+        phoneNumber: phone,
         code: phoneOtp,
         disableSession: false,
         updatePhoneNumber: false,
@@ -396,7 +396,7 @@ export default function SignInScreen() {
                 <View
                   style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
                 >
-                  <Pressable
+                  {/*<Pressable
                     onPress={() => setMode("email")}
                     style={{
                       flex: 1,
@@ -420,8 +420,8 @@ export default function SignInScreen() {
                     >
                       Email
                     </Text>
-                  </Pressable>
-                  <Pressable
+                  </Pressable>*/}
+                  {/*<Pressable
                     onPress={() => setMode("mobile")}
                     style={{
                       flex: 1,
@@ -445,7 +445,7 @@ export default function SignInScreen() {
                     >
                       Mobile
                     </Text>
-                  </Pressable>
+                  </Pressable>*/}
                 </View>
 
                 {/* Input depending on mode */}
@@ -492,15 +492,17 @@ export default function SignInScreen() {
                       }}
                     >
                       {loading === "email-send" ? (
-                        <ActivityIndicator color={theme.primaryForeground} />
+                        <ActivityIndicator color={theme.secondaryForeground} />
                       ) : emailCooldown > 0 ? (
-                        <Text style={{ color: theme.primaryForeground }}>
+                        <Text style={{ color: theme.secondaryForeground }}>
                           Resend OTP in {emailCooldown}s
                         </Text>
                       ) : (
                         <Text
                           style={{
-                            color: theme.primaryForeground,
+                            color: !email
+                              ? theme.secondaryForeground
+                              : theme.primaryForeground,
                             fontWeight: "600",
                           }}
                         >
@@ -553,9 +555,9 @@ export default function SignInScreen() {
                       }}
                     >
                       {loading === "phone-send" ? (
-                        <ActivityIndicator color={theme.primaryForeground} />
+                        <ActivityIndicator color={theme.secondaryForeground} />
                       ) : phoneCooldown > 0 ? (
-                        <Text style={{ color: theme.primaryForeground }}>
+                        <Text style={{ color: theme.secondaryForeground }}>
                           Resend OTP in {phoneCooldown}s
                         </Text>
                       ) : (
@@ -647,7 +649,7 @@ export default function SignInScreen() {
                   }}
                 >
                   {loading === "email-verify" || loading === "phone-verify" ? (
-                    <ActivityIndicator color={theme.primaryForeground} />
+                    <ActivityIndicator color={theme.secondaryForeground} />
                   ) : (
                     <Text
                       style={{
@@ -675,14 +677,14 @@ export default function SignInScreen() {
                     </TouchableOpacity>
                   )}
 
-                  <TouchableOpacity
+                  {/*<TouchableOpacity
                     onPress={handleChangeMethod}
                     style={{ marginTop: 8 }}
                   >
                     <Text style={{ color: theme.mutedForeground }}>
                       Change method
                     </Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity>*/}
                 </View>
               </>
             )}

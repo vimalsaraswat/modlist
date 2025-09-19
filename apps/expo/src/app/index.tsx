@@ -22,8 +22,8 @@ export default function App() {
     const user = session.user;
 
     const isProfileIncomplete =
-      !user.phoneNumber ||
-      !user.phoneNumberVerified ||
+      // !user.phoneNumber ||
+      // !user.phoneNumberVerified ||
       !user.name || // you can add more fields as required
       !user.image;
 

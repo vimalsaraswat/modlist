@@ -7,110 +7,121 @@ import { useThemeColors } from "~/styles/colors";
 import SignOut from "../auth/sign-out";
 import Avatar from "../common/avatar";
 
-export default function ProfileHeader({
-  user,
-}: {
+interface ProfileHeaderProps {
   user: {
-    city: string;
-    bio: string | null;
     id: string;
-    name: string | null;
-    image: string | null;
+    name: string;
     email: string;
+    bio: string | null;
+    image: string | null;
+    city: string | null;
     createdAt: Date;
-    cityId: number | null;
-    phoneNumber?: string | null;
-    phoneNumberVerified?: boolean | null;
+    phoneNumber: string | null;
+    phoneNumberVerified: boolean | null;
   };
-}) {
+}
+
+export default function ProfileHeader({ user }: ProfileHeaderProps) {
   const theme = useThemeColors();
 
   return (
-    <View className="rounded-2xl border border-border bg-card/80 p-4 shadow-md">
-      {/* Top: Avatar + Name */}
-      <View className="flex-row items-start gap-4">
-        <Avatar image={user.image} name={user.name} size="lg" />
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2">
-            <Text className="text-xl font-semibold text-foreground">
-              {user.name}
-            </Text>
-            {user.phoneNumberVerified && (
-              <View className="flex-row items-center rounded-full bg-muted px-2 py-0.5">
-                <Ionicons
-                  name="shield-checkmark"
-                  color={theme.mutedForeground}
-                  size={14}
-                />
-                <Text className="ml-1 text-xs text-muted-foreground">
-                  Verified
-                </Text>
-              </View>
+    <View className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <View className="flex-row items-start">
+        <View className="flex-1 flex-row items-start gap-4">
+          <Avatar
+            image={user.image}
+            name={user.name}
+            size="lg"
+            className="rounded-2xl"
+          />
+          <View className="flex-1">
+            {/* Name and Verification Badge */}
+            <View className="flex-row items-center gap-2">
+              <Text className="text-2xl font-bold text-foreground">
+                {user.name}
+              </Text>
+            </View>
+
+            {/* User Bio */}
+            {user.bio && (
+              <Text
+                className="mt-1 text-sm text-muted-foreground"
+                numberOfLines={2}
+              >
+                {user.bio}
+              </Text>
             )}
           </View>
-          {user.bio ? (
-            <Text
-              className="mt-1 text-xs text-muted-foreground"
-              numberOfLines={2}
-            >
-              {user.bio}
-            </Text>
-          ) : null}
         </View>
-        {/*<TouchableOpacity
-          onPress={logout}
-          className="flex-row items-center justify-center rounded-lg bg-destructive/10 p-3"
-        >
-          <Ionicons
-            name="log-out-outline"
-            size={14}
-            color={theme.destructive}
-          />
-          <Text className="ml-1 text-xs font-semibold text-destructive">
-            Logout
-          </Text>*
-        </TouchableOpacity>*/}
+
+        {/* Edit Profile Action Button */}
         <SignOut />
       </View>
 
-      {/* Meta info */}
-      <View className="mt-3 flex-row flex-wrap gap-x-4 gap-y-1">
-        <View className="flex-row items-center">
-          <Ionicons name="mail" color={theme.mutedForeground} size={14} />
-          <Text className="ml-1 text-xs text-muted-foreground">
-            {user.email}
-          </Text>
+      {/* Divider */}
+      <View className="my-4 h-px bg-border" />
+
+      <View className="gap-3">
+        {/* Email */}
+        <View className="flex-row items-center gap-3">
+          <Ionicons
+            name="mail-outline"
+            color={theme.mutedForeground}
+            size={16}
+          />
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-sm text-muted-foreground">{user.email}</Text>
+            {/* Email Verified Badge */}
+            {/*<Ionicons name="shield-checkmark" color={theme.primary} size={16} />*/}
+          </View>
         </View>
-        {user.city && (
-          <View className="flex-row items-center">
-            <Ionicons name="map" color={theme.mutedForeground} size={14} />
-            <Text className="ml-1 text-xs text-muted-foreground">
-              {user.city}
-            </Text>
+
+        {user.phoneNumber && (
+          <View className="flex-row items-center gap-3">
+            <Ionicons
+              name="call-outline"
+              color={theme.mutedForeground}
+              size={16}
+            />
+            <View className="flex-row items-center gap-1.5">
+              <Text className="text-sm text-muted-foreground">
+                {user.phoneNumber}
+              </Text>
+              {/* Phone Verified Badge */}
+              {/*{user.phoneNumberVerified && (
+                <Ionicons
+                  name="shield-checkmark"
+                  color={theme.primary}
+                  size={16}
+                />
+              )}*/}
+            </View>
           </View>
         )}
-        <View className="flex-row items-center">
-          <Ionicons name="time" color={theme.mutedForeground} size={14} />
-          <Text className="ml-1 text-xs text-muted-foreground">
+
+        {/* Location */}
+        {/*{user.city && (
+          <View className="flex-row items-center gap-3">
+            <Ionicons
+              name="map-outline"
+              color={theme.mutedForeground}
+              size={16}
+            />
+            <Text className="text-sm text-muted-foreground">{user.city}</Text>
+          </View>
+        )}*/}
+
+        {/* Join Date */}
+        <View className="flex-row items-center gap-3">
+          <Ionicons
+            name="calendar-outline"
+            color={theme.mutedForeground}
+            size={16}
+          />
+          <Text className="text-sm text-muted-foreground">
             Joined {formatDate(user.createdAt)}
           </Text>
         </View>
-      </View>
-
-      {/* Actions */}
-      <View className="mt-4 flex-row justify-end gap-2">
-        {/*<ProfileEditDialog user={user} />
-        <SignOutButton />*/}
-        {/*<TouchableOpacity
-          onPress={logout}
-          className="flex-row items-center justify-center rounded-lg bg-destructive/10 p-3"
-        >
-          <Ionicons
-            name="log-out-outline"
-            size={14}
-            color={theme.destructive}
-          />
-        </TouchableOpacity>*/}
       </View>
     </View>
   );

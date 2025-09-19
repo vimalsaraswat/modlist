@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   Keyboard,
@@ -14,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,6 +24,8 @@ import { formatDateLabel, formatTime } from "@acme/helpers";
 import type { Message, ProductMetadata } from "~/types/chats";
 import Avatar from "~/components/common/avatar";
 import BackButton from "~/components/common/back-btn";
+import { useMediaUploader } from "~/hooks/useMediaUploader";
+import { useThemeColors } from "~/styles/colors";
 import { trpc } from "~/utils/api";
 import { authClient } from "~/utils/auth";
 
@@ -81,6 +83,10 @@ const MessageBubble = ({
   message: Message;
   isMe: boolean;
 }) => {
+  const colors = useThemeColors();
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   const showTime = (date: Date) => {
     try {
       return formatTime(date);
@@ -98,10 +104,10 @@ const MessageBubble = ({
         } catch {
           return (
             <Text
-              className={clsx(
-                "text-sm",
-                isMe ? "text-white" : "text-foreground",
-              )}
+              className={clsx("text-sm", isMe ? "text-white" : "")}
+              style={{
+                color: isMe ? colors.primaryForeground : colors.foreground,
+              }}
             >
               {message.text || "Product shared"}
             </Text>
@@ -109,15 +115,80 @@ const MessageBubble = ({
         }
       case "system":
         return (
-          <Text className="text-center text-xs italic text-muted-foreground">
+          <Text
+            className="text-center text-xs italic"
+            style={{ color: colors.mutedForeground }}
+          >
             {message.text}
           </Text>
         );
       case "media":
         return (
-          <View className="rounded-lg bg-muted p-3">
-            <Ionicons name="image-outline" size={24} color="#9CA3AF" />
-            <Text className="mt-1 text-xs text-muted-foreground">Media</Text>
+          <View className="rounded-lg">
+            {message.metadata?.image ? (
+              <View className="relative h-60 w-60">
+                {isImageLoading && !imageError && (
+                  <View className="absolute inset-0 flex items-center justify-center">
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  </View>
+                )}
+                <Image
+                  source={{ uri: message.metadata.image }}
+                  className={clsx(
+                    "h-60 w-60 rounded-lg",
+                    imageError && "opacity-0",
+                  )}
+                  resizeMode="cover"
+                  onLoadStart={() => {
+                    setIsImageLoading(true);
+                  }}
+                  onLoadEnd={() => setIsImageLoading(false)}
+                  onError={() => {
+                    setIsImageLoading(false);
+                    setImageError(true);
+                  }}
+                />
+                {imageError && (
+                  <View className="absolute inset-0 flex items-center justify-center">
+                    <Ionicons
+                      name="image-outline"
+                      size={24}
+                      color={colors.mutedForeground}
+                    />
+                    <Text
+                      className="mt-1 text-xs"
+                      style={{ color: colors.mutedForeground }}
+                    >
+                      Image failed to load
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View className="flex items-center">
+                <Ionicons
+                  name="image-outline"
+                  size={24}
+                  color={colors.mutedForeground}
+                />
+                <Text
+                  className="mt-1 text-xs"
+                  style={{ color: colors.mutedForeground }}
+                >
+                  No image available
+                </Text>
+              </View>
+            )}
+            {message.text && (
+              <Text
+                className="mt-1 text-sm"
+                style={{
+                  color: isMe ? colors.primaryForeground : colors.foreground,
+                }}
+              >
+                {message.text}
+              </Text>
+            )}
           </View>
         );
       default:
@@ -146,7 +217,6 @@ const MessageBubble = ({
         )}
       >
         {renderContent()}
-
         <Text
           className={clsx(
             "mt-1 self-end text-xs",
@@ -163,12 +233,12 @@ const MessageBubble = ({
 export default function ChatDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: session } = authClient.useSession();
+  const colors = useThemeColors();
 
   const router = useRouter();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-
   const [behaviour, setBehaviour] = useState<"padding" | undefined>("padding");
 
   const flatListRef = useRef<FlatList>(null);
@@ -193,37 +263,76 @@ export default function ChatDetailScreen() {
     ),
   );
 
-  const sendMessage = useMutation(
-    trpc.chat.sendMessage.mutationOptions({
-      onSuccess: async () => {
-        setText("");
-        await queryClient.invalidateQueries(trpc.chat.getMessages.pathFilter());
-      },
-      onError: (error) => {
-        Alert.alert("Error", "Failed to send message. Please try again.");
-        console.error("Send message error:", error);
+  const getPresignedUrl = useMutation(
+    trpc.uploader.getPreSignedUrl.mutationOptions({
+      onError: () => {
+        Toast.show({ type: "error", text1: "Image upload failed" });
       },
     }),
   );
 
-  const groupedMessages = messages.reduce(
-    (groups: Record<string, Message[]>, message) => {
-      const dateKey = new Date(message.createdAt).toDateString();
-      groups[dateKey] ??= [];
-      groups[dateKey].push(message);
-      return groups;
-    },
-    {},
+  const sendMessage = useMutation(
+    trpc.chat.sendMessage.mutationOptions({
+      onSuccess: async () => {
+        setText("");
+        removeAll();
+        await queryClient.invalidateQueries(trpc.chat.getMessages.pathFilter());
+      },
+      onError: () => {
+        Toast.show({
+          type: "error",
+          text1: "Message failed to send. Please try again.",
+        });
+      },
+    }),
   );
 
-  const flattenedMessages = Object.entries(groupedMessages).flatMap(
-    ([date, msgs]) => [{ type: "date-header", date: new Date(date) }, ...msgs],
-  );
+  const {
+    files,
+    previews,
+    isUploading,
+    handleFileChange,
+    removeFile,
+    removeAll,
+    uploadAll,
+  } = useMediaUploader({
+    maxFiles: 1,
+    maxFileSizeMB: 2,
+    allowedTypes: [
+      "image/jpg",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ],
+    getPresignedUrl: getPresignedUrl.mutateAsync,
+  });
 
-  const handleSend = () => {
-    if (text.trim() && !sendMessage.isPending) {
-      sendMessage.mutate({ chatId: id, text: text.trim() });
+  const handleSend = async () => {
+    if (!text.trim() && !files.length) return;
+    if (sendMessage.isPending || isUploading) return;
+
+    let mediaUrl: string | undefined;
+
+    if (files.length) {
+      try {
+        const [url] = await uploadAll();
+        mediaUrl = url;
+      } catch (err) {
+        console.log("\n\n\n\nerrrrrrrororrrrrrrr\n\n", err);
+        Toast.show({
+          type: "error",
+          text1: "Image upload failed. Please try again.",
+        });
+        return;
+      }
     }
+
+    await sendMessage.mutateAsync({
+      chatId: id,
+      text: text.trim(),
+      mediaUrl,
+    });
   };
 
   const handleRefresh = async () => {
@@ -253,6 +362,20 @@ export default function ChatDetailScreen() {
     };
   }, []);
 
+  const groupedMessages = messages.reduce(
+    (groups: Record<string, Message[]>, message) => {
+      const dateKey = new Date(message.createdAt).toDateString();
+      groups[dateKey] ??= [];
+      groups[dateKey].push(message);
+      return groups;
+    },
+    {},
+  );
+
+  const flattenedMessages = Object.entries(groupedMessages).flatMap(
+    ([date, msgs]) => [{ type: "date-header", date: new Date(date) }, ...msgs],
+  );
+
   useEffect(() => {
     if (flattenedMessages.length > 0) {
       setTimeout(() => {
@@ -263,14 +386,17 @@ export default function ChatDetailScreen() {
 
   if (chatLoading || messagesLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+      >
         <Stack.Screen
           options={{
             headerShown: false,
           }}
         />
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#1DA1F2" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -278,34 +404,62 @@ export default function ChatDetailScreen() {
 
   if (chatError || messagesError || !chatData) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+      >
         <Stack.Screen
           options={{
             headerShown: false,
           }}
         />
         <View className="flex-1 items-center justify-center px-8">
-          <View className="mb-6 h-24 w-24 items-center justify-center rounded-full bg-destructive/10">
-            <Ionicons name="warning-outline" size={40} color="#EF4444" />
+          <View
+            className="mb-6 h-24 w-24 items-center justify-center rounded-full"
+            style={{ backgroundColor: colors.destructive }}
+          >
+            <Ionicons
+              name="warning-outline"
+              size={40}
+              color={colors.destructiveForeground}
+            />
           </View>
-          <Text className="mb-2 text-center text-xl font-bold text-foreground">
+          <Text
+            className="mb-2 text-center text-xl font-bold"
+            style={{ color: colors.foreground }}
+          >
             Unable to Load Chat
           </Text>
-          <Text className="mb-6 text-center text-muted-foreground">
+          <Text
+            className="mb-6 text-center"
+            style={{ color: colors.mutedForeground }}
+          >
             There was a problem loading this conversation. Please try again.
           </Text>
           <View className="flex-row gap-3">
             <TouchableOpacity
               onPress={handleBack}
-              className="rounded-lg bg-muted px-6 py-3"
+              className="rounded-lg px-6 py-3"
+              style={{ backgroundColor: colors.muted }}
             >
-              <Text className="font-semibold text-foreground">Back</Text>
+              <Text
+                className="font-semibold"
+                style={{ color: colors.foreground }}
+              >
+                Back
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleRefresh}
-              className="rounded-lg bg-primary px-6 py-3"
+              className="rounded-lg px-6 py-3"
+              style={{ backgroundColor: colors.primary }}
             >
-              <Text className="font-semibold text-foreground">Retry</Text>
+              <Text
+                className="font-semibold"
+                style={{ color: colors.primaryForeground }}
+              >
+                Retry
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -319,16 +473,28 @@ export default function ChatDetailScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+    >
       {/* Header */}
-      <View className="flex-row items-center gap-2 border-b border-border px-4 py-3">
+      <View
+        className="flex-row items-center gap-2 border-b px-4 py-3"
+        style={{ borderColor: colors.border }}
+      >
         <BackButton />
-
         <View className="flex-1 flex-row items-center">
-          <Avatar image={otherUser?.user?.image} name={otherUser?.user?.name} />
-
+          <Avatar
+            image={otherUser?.user?.image}
+            name={otherUser?.user?.name}
+            userId={otherUser?.user?.id}
+          />
           <View className="ml-3">
-            <Text className="font-semibold text-foreground" numberOfLines={1}>
+            <Text
+              className="font-semibold"
+              style={{ color: colors.foreground }}
+              numberOfLines={1}
+            >
               {otherUser?.user?.name || "Unknown User"}
             </Text>
           </View>
@@ -352,17 +518,15 @@ export default function ChatDetailScreen() {
             if ("date" in item) {
               return <DateHeader date={item.date} />;
             }
-
             const message = item as Message;
             const isMe = message.senderId === session?.user.id;
-
             return <MessageBubble message={message} isMe={isMe} />;
           }}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              tintColor="#1DA1F2"
+              tintColor={colors.primary}
             />
           }
           contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
@@ -373,39 +537,114 @@ export default function ChatDetailScreen() {
         />
 
         {/* Input Area */}
-        <View className="border-t border-border bg-background px-4 py-3">
-          <View className="flex-row items-center">
-            {/*<TouchableOpacity className="mr-2">
-              <Ionicons name="add" size={24} color="#9CA3AF" />
-            </TouchableOpacity>*/}
+        <View
+          className="border-t px-4 py-3"
+          style={{
+            borderColor: colors.border,
+            backgroundColor: colors.background,
+          }}
+        >
+          {/* Image Preview */}
+          {files.length > 0 && (
+            <View className="relative mb-2 h-24 w-24">
+              <Image
+                source={{ uri: previews[0] }}
+                className="h-full w-full rounded-md border"
+                style={{ borderColor: colors.border }}
+                resizeMode="cover"
+              />
+              <TouchableOpacity
+                onPress={() => removeFile(0)}
+                className="absolute -right-2 -top-2 rounded-full p-1"
+                style={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
+                accessibilityLabel="Remove image"
+              >
+                <Ionicons
+                  name="close"
+                  size={16}
+                  color={colors.primaryForeground}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
 
+          {/* Input Row */}
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              onPress={handleFileChange}
+              disabled={isUploading || sendMessage.isPending}
+              className="rounded-md p-2"
+              style={{
+                backgroundColor:
+                  isUploading || sendMessage.isPending
+                    ? colors.muted
+                    : colors.background,
+              }}
+              accessibilityLabel="Attach image"
+            >
+              <Ionicons
+                name="image"
+                size={24}
+                color={
+                  isUploading || sendMessage.isPending
+                    ? colors.mutedForeground
+                    : colors.foreground
+                }
+              />
+            </TouchableOpacity>
             <TextInput
               value={text}
               onChangeText={setText}
               placeholder="Type a message..."
-              className="flex-1 rounded-2xl bg-muted px-4 py-3 text-foreground"
+              placeholderTextColor={colors.mutedForeground}
+              className="flex-1 rounded-2xl px-4 py-3 text-sm"
+              style={{
+                backgroundColor: colors.muted,
+                color: colors.foreground,
+              }}
               multiline
               numberOfLines={5}
               maxLength={1000}
+              editable={!isUploading && !sendMessage.isPending}
             />
-
             <TouchableOpacity
               onPress={handleSend}
-              disabled={!text.trim() || sendMessage.isPending}
+              disabled={
+                (!text.trim() && !files.length) ||
+                sendMessage.isPending ||
+                isUploading
+              }
               className={clsx(
                 "ml-2 h-10 w-10 items-center justify-center rounded-full",
-                text.trim() && !sendMessage.isPending
+                (text.trim() || files.length) &&
+                  !sendMessage.isPending &&
+                  !isUploading
                   ? "bg-primary"
                   : "bg-muted",
               )}
+              style={{
+                backgroundColor:
+                  (text.trim() || files.length) &&
+                  !sendMessage.isPending &&
+                  !isUploading
+                    ? colors.primary
+                    : colors.muted,
+              }}
             >
-              {sendMessage.isPending ? (
-                <ActivityIndicator size="small" color="white" />
+              {sendMessage.isPending || isUploading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.primaryForeground}
+                />
               ) : (
                 <Ionicons
                   name="send"
                   size={20}
-                  color={text.trim() ? "white" : "#9CA3AF"}
+                  color={
+                    text.trim() || files.length
+                      ? colors.primaryForeground
+                      : colors.mutedForeground
+                  }
                 />
               )}
             </TouchableOpacity>

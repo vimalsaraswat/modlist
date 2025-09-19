@@ -2,6 +2,7 @@ import React from "react";
 import { Image, Text, View } from "react-native";
 
 import { authClient } from "~/utils/auth";
+import Avatar from "../common/avatar";
 import MessageSellerButton from "./message-seller-btn";
 
 interface User {
@@ -33,14 +34,17 @@ const ListingSellerInfo = ({
 
   return (
     <View>
-      <View className="rounded-xl border border-border bg-card p-4">
-        <View className="mb-4 flex-row items-center">
+      <View className="space-y-4 rounded-xl border border-border bg-card p-4">
+        <View className="flex-row items-center">
           {seller.image && (
-            <Image
-              source={{ uri: seller.image }}
-              className="mr-3 h-12 w-12 rounded-full"
+            <Avatar
+              image={seller.image}
+              name={seller.name}
+              className="mr-3"
+              userId={session?.user.id}
             />
           )}
+
           <View>
             <Text className="text-lg font-semibold text-foreground">
               {seller.name}
@@ -51,7 +55,9 @@ const ListingSellerInfo = ({
           </View>
         </View>
         {session?.user.id && sellerId !== session.user.id && (
-          <MessageSellerButton sellerId={sellerId} listing={listing} />
+          <View className="mt-4">
+            <MessageSellerButton sellerId={sellerId} listing={listing} />
+          </View>
         )}
       </View>
     </View>

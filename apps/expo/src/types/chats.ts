@@ -19,7 +19,18 @@ export interface Message {
   id: string;
   createdAt: Date;
   updatedAt: Date | null;
-  metadata: unknown;
+  metadata:
+    | {
+        listingId: string;
+        title: string;
+        image: string;
+        description: string;
+      }
+    | {
+        image: string;
+        alt?: string;
+      }
+    | null;
   type: "text" | "system" | "product" | "media" | "order";
   chatId: string;
   senderId: string | null;

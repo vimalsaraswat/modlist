@@ -74,7 +74,7 @@ export default function OnboardingScreen() {
     try {
       setLoading("phone-send");
       const { data, error: apiError } = await authClient.phoneNumber.sendOtp({
-        phoneNumber: "+91" + phone,
+        phoneNumber: phone,
       });
       if (apiError) throw apiError;
       if (data) {
@@ -107,7 +107,7 @@ export default function OnboardingScreen() {
     try {
       setLoading("phone-verify");
       const { data, error: apiError } = await authClient.phoneNumber.verify({
-        phoneNumber: "+91" + phone,
+        phoneNumber: phone,
         code: phoneOtp,
         disableSession: true,
         updatePhoneNumber: true,
@@ -174,16 +174,16 @@ export default function OnboardingScreen() {
       Alert.alert("Validation", "Please enter your name");
       return;
     }
-    if (!phone.trim()) {
-      Alert.alert("Validation", "Please enter your mobile number");
-      return;
-    }
+    // if (!phone.trim()) {
+    //   Alert.alert("Validation", "Please enter your mobile number");
+    //   return;
+    // }
 
-    // if phone not verified → block until verified
-    if (!user?.phoneNumberVerified) {
-      Alert.alert("Validation", "Verify your phone number first");
-      return;
-    }
+    // // if phone not verified → block until verified
+    // if (!user?.phoneNumberVerified) {
+    //   Alert.alert("Validation", "Verify your phone number first");
+    //   return;
+    // }
 
     setLoading("submit");
     try {
@@ -366,7 +366,7 @@ export default function OnboardingScreen() {
               </View>
 
               {/* Phone */}
-              <View>
+              {/*<View>
                 <View className="flex flex-row items-center">
                   <Text
                     style={{
@@ -408,12 +408,12 @@ export default function OnboardingScreen() {
                     color: theme.foreground,
                   }}
                 />
-              </View>
+              </View>*/}
 
               {/* OTP flow */}
               {!user?.phoneNumberVerified && phoneOtpSent && (
                 <View>
-                  <Text
+                  {/*<Text
                     style={{
                       fontSize: 13,
                       fontWeight: "500",
@@ -444,9 +444,9 @@ export default function OnboardingScreen() {
                       letterSpacing: 8,
                     }}
                     maxLength={6}
-                  />
+                  />*/}
                   {/* === ADDED: Resend OTP and Timer logic === */}
-                  <View style={{ marginTop: 12, alignItems: "center" }}>
+                  {/*<View style={{ marginTop: 12, alignItems: "center" }}>
                     {phoneCooldown > 0 ? (
                       <Text
                         style={{
@@ -472,7 +472,7 @@ export default function OnboardingScreen() {
                         </Text>
                       </TouchableOpacity>
                     )}
-                  </View>
+                  </View>*/}
                 </View>
               )}
             </View>
@@ -493,7 +493,7 @@ export default function OnboardingScreen() {
             {/* Action Buttons */}
             <View style={{ marginTop: 24, gap: 12 }}>
               {/* Phone verification buttons */}
-              {!user?.phoneNumberVerified &&
+              {/*{!user?.phoneNumberVerified &&
                 (phoneOtpSent ? (
                   <TouchableOpacity
                     disabled={loading === "phone-verify"}
@@ -552,7 +552,7 @@ export default function OnboardingScreen() {
                       </Text>
                     )}
                   </TouchableOpacity>
-                ))}
+                ))}*/}
 
               {/* Submit button */}
               <TouchableOpacity

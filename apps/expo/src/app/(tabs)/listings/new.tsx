@@ -98,7 +98,7 @@ const AddListingScreen = () => {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       quality: 0.8,
       selectionLimit: 5,
     });

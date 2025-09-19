@@ -14,7 +14,8 @@ const TabsLayout = () => {
 
   if (!session) return <Redirect href="/" />;
 
-  const hideTabBar = pathname.split("/").length >= 3;
+  const hideTabBar =
+    pathname.split("/").length >= 3 || pathname === "/new-listing";
 
   return (
     <Tabs
@@ -72,6 +73,22 @@ const TabsLayout = () => {
               size={size}
               color={color}
               style={{ minWidth: size, minHeight: size, textAlign: "center" }}
+            />
+          ),
+        }}
+      />
+
+      {/* Corrected "Add" Tab using tabBarButton */}
+      <Tabs.Screen
+        name="new-listing"
+        options={{
+          title: "Add",
+          tabBarLabel: () => null,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "add-circle" : "add-circle-outline"}
+              size={size + 6}
+              color={color}
             />
           ),
         }}
