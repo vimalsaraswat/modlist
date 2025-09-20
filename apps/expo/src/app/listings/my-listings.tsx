@@ -12,6 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
+import { formatDate } from "@acme/helpers";
+
 import Header from "~/components/listings/new/header";
 import { trpc } from "~/utils/api";
 
@@ -35,7 +37,9 @@ interface ListingItem {
 
 const LIMIT = 20;
 
-const FavouritesScreen = () => {
+const MyListingsScreen = () => {
+  const router = useRouter();
+
   const [isRefetching, setIsRefetching] = useState(false);
   const queryClient = useQueryClient();
 
@@ -48,7 +52,7 @@ const FavouritesScreen = () => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery(
-    trpc.listing.favouritesList.infiniteQueryOptions(
+    trpc.listing.myListingsList.infiniteQueryOptions(
       { limit: LIMIT },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -76,7 +80,7 @@ const FavouritesScreen = () => {
   if (isPending && !isRefetching) {
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <Header title="Favourites" />
+        <Header title="Your Listings" />
 
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1DA1F2" />
@@ -89,7 +93,7 @@ const FavouritesScreen = () => {
     console.log("error", error);
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <Header title="Favourites" />
+        <Header title="Your Listings" />
 
         <View className="flex-1 items-center justify-center px-6">
           <Text className="mb-4 text-2xl font-bold text-foreground">
@@ -112,21 +116,25 @@ const FavouritesScreen = () => {
   if (listings.length === 0) {
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <Header title="Favourites" />
+        <Header title="Your Listings" />
 
         <View className="flex-1 items-center justify-center px-6">
           <Text className="mb-4 text-2xl font-bold text-foreground">
-            No favourites found
+            No listings found
           </Text>
           <Text className="mb-6 text-center text-muted-foreground">
-            Add items to your favourites to see them here.
+            Create a listing and it will show up here.
           </Text>
           <Pressable
-            onPress={handlePullToRefresh}
+            onPress={() => {
+              router.push({
+                pathname: "/(tabs)/listings/new",
+              });
+            }}
             className="rounded-lg bg-primary px-6 py-3"
           >
             <Text className="font-semibold text-primary-foreground">
-              Refresh
+              List your parts
             </Text>
           </Pressable>
         </View>
@@ -136,7 +144,7 @@ const FavouritesScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <Header title="Favourites" />
+      <Header title="Your Listings" />
 
       <FlatList
         data={listings}
@@ -163,17 +171,9 @@ const FavouritesScreen = () => {
     </SafeAreaView>
   );
 };
+
 const ListingCard = ({ item }: { item: ListingItem }) => {
   const router = useRouter();
-
-  // Format date
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
 
   return (
     <Pressable
@@ -256,4 +256,4 @@ const ListingCard = ({ item }: { item: ListingItem }) => {
   );
 };
 
-export default FavouritesScreen;
+export default MyListingsScreen;

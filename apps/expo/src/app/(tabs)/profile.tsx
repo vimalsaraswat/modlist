@@ -102,9 +102,9 @@ export default function ProfileScreen() {
 
             {/* My Listings */}
             <Section
-              title="My Listings"
+              title="Your Listings"
               actionLabel="See All"
-              onAction={() => router.push("/listings/my")}
+              onAction={() => router.push("/listings/my-listings")}
             >
               {listings?.length ? (
                 listings.slice(0, 3).map((listing) => (
@@ -268,3 +268,112 @@ function Section({
     </View>
   );
 }
+
+// import React, { useCallback, useState } from "react";
+// import {
+//   ActivityIndicator,
+//   FlatList,
+//   RefreshControl,
+//   Text,
+//   View,
+// } from "react-native";
+// import { SafeAreaView } from "react-native-safe-area-context";
+// import { useRouter } from "expo-router";
+// import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+// import FavouritesSection from "~/components/profile/favourites-section";
+// import MyGarageSection from "~/components/profile/my-garage-section";
+// import MyListingsSection from "~/components/profile/my-listings-section";
+// import ProfileHeader from "~/components/profile/profile-header";
+// import { Button } from "~/components/ui/button";
+// import { trpc } from "~/utils/api";
+
+// export default function ProfileScreen() {
+//   const router = useRouter();
+//   const queryClient = useQueryClient();
+//   const [refreshing, setRefreshing] = useState(false);
+
+//   // Queries
+//   const {
+//     data: user,
+//     isLoading: userLoading,
+//     isError: userError,
+//   } = useQuery(trpc.auth.getUserProfile.queryOptions());
+//   const {
+//     data: listings,
+//     isLoading: listingsLoading,
+//     isError: listingsError,
+//   } = useQuery(trpc.auth.getUserListings.queryOptions({ limit: 5 }));
+//   const {
+//     data: garage,
+//     isLoading: garageLoading,
+//     isError: garageError,
+//   } = useQuery(trpc.garage.myGarage.queryOptions());
+//   const {
+//     data: favourites,
+//     isLoading: favLoading,
+//     isError: favError,
+//   } = useQuery(trpc.listing.favouritesList.queryOptions({}));
+
+//   const handleRefresh = useCallback(async () => {
+//     setRefreshing(true);
+//     try {
+//       await Promise.all([
+//         queryClient.invalidateQueries(trpc.auth.getUserProfile.queryFilter()),
+//         queryClient.invalidateQueries(trpc.auth.getUserListings.queryFilter()),
+//         queryClient.invalidateQueries(trpc.garage.myGarage.queryFilter()),
+//         queryClient.invalidateQueries(
+//           trpc.listing.favouritesList.queryFilter(),
+//         ),
+//       ]);
+//     } finally {
+//       setRefreshing(false);
+//     }
+//   }, [queryClient]);
+
+//   // Loading & Error States
+//   if (userLoading || listingsLoading || garageLoading || favLoading) {
+//     // Implement skeleton loading here for a better UX
+//     return (
+//       <View className="flex-1 items-center justify-center bg-background">
+//         <ActivityIndicator size="large" />
+//       </View>
+//     );
+//   }
+
+//   if (userError || listingsError || garageError || favError || !user) {
+//     return (
+//       <View className="flex-1 items-center justify-center bg-background p-6">
+//         <Text className="text-lg font-semibold text-destructive">
+//           Failed to load profile. Please log in again.
+//         </Text>
+//         <Button className="mt-4" onPress={() => router.push("/")}>
+//           Login
+//         </Button>
+//       </View>
+//     );
+//   }
+
+//   const sections = [
+//     { key: "header", component: <ProfileHeader user={user} /> },
+//     { key: "listings", component: <MyListingsSection listings={listings} /> },
+//     { key: "garage", component: <MyGarageSection garage={garage} /> },
+//     {
+//       key: "favourites",
+//       component: <FavouritesSection favourites={favourites?.items ?? []} />,
+//     },
+//   ];
+
+//   return (
+//     <SafeAreaView className="flex-1 bg-background">
+//       <FlatList
+//         data={sections}
+//         renderItem={({ item }) => <View className="p-2">{item.component}</View>}
+//         keyExtractor={(item) => item.key}
+//         refreshControl={
+//           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+//         }
+//       />
+//     </SafeAreaView>
+//   );
+// }
