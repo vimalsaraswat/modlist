@@ -401,9 +401,9 @@ export default function SignInDialog() {
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="flex items-center">
           <LogIn className="mr-2 h-4 w-4" />
-          Sign In
+          <span className="max-sm:sr-only">Sign In</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[calc(100vw-1rem)] space-y-6 sm:max-w-md">
