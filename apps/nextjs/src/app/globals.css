@@ -158,10 +158,10 @@
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | CUSTOM MODLIST THEMES
-  |--------------------------------------------------------------------------
-  */
+	|--------------------------------------------------------------------------
+	| CUSTOM MODLIST THEMES
+	|--------------------------------------------------------------------------
+	*/
 
   /* 1. Midnight Theme 🌃 (Sleek & Tactical - Dark Blue Accent) */
   .midnight {
@@ -355,11 +355,107 @@
     --sidebar-ring: 210 70% 55%;
   }
 
+  /* 7. Engine Bay Theme ⚙️ (Dark, Metallic, High-tech - Cyan Accent) */
+  .engine-bay {
+    --background: 220 10% 10%;
+    --foreground: 210 10% 90%;
+    --card: 220 10% 15%;
+    --card-foreground: 210 10% 95%;
+    --popover: 220 10% 15%;
+    --popover-foreground: 210 10% 95%;
+    --primary: 190 60% 70%; /* Cyan/Steel Blue */
+    --primary-foreground: 220 10% 10%;
+    --secondary: 220 10% 25%;
+    --secondary-foreground: 210 10% 80%;
+    --muted: 220 10% 20%;
+    --muted-foreground: 210 5% 60%;
+    --accent: 190 60% 80%;
+    --accent-foreground: 220 10% 10%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 220 10% 10%;
+    --border: 220 10% 30%;
+    --input: 220 10% 30%;
+    --ring: 190 60% 70%;
+
+    --sidebar: 220 10% 10%;
+    --sidebar-foreground: 210 10% 90%;
+    --sidebar-primary: 190 60% 70%;
+    --sidebar-primary-foreground: 220 10% 10%;
+    --sidebar-accent: 190 60% 80%;
+    --sidebar-accent-foreground: 220 10% 10%;
+    --sidebar-border: 220 10% 30%;
+    --sidebar-ring: 190 60% 70%;
+  }
+
+  /* 8. Asphalt Theme 🛣️ (Road-inspired, High-vis - Safety Yellow Accent) */
+  .asphalt {
+    --background: 210 5% 40%;
+    --foreground: 0 0% 98%;
+    --card: 210 5% 50%;
+    --card-foreground: 0 0% 98%;
+    --popover: 210 5% 50%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 40 100% 50%; /* Safety Yellow */
+    --primary-foreground: 210 5% 10%;
+    --secondary: 210 5% 60%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 210 5% 55%;
+    --muted-foreground: 210 5% 80%;
+    --accent: 40 100% 65%;
+    --accent-foreground: 210 5% 10%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 5% 60%;
+    --input: 210 5% 60%;
+    --ring: 40 100% 50%;
+
+    --sidebar: 210 5% 40%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 40 100% 50%;
+    --sidebar-primary-foreground: 210 5% 10%;
+    --sidebar-accent: 40 100% 65%;
+    --sidebar-accent-foreground: 210 5% 10%;
+    --sidebar-border: 210 5% 60%;
+    --sidebar-ring: 40 100% 50%;
+  }
+
+  /* 9. White Wall Theme ⚪ (Clean, High-contrast Light - Black/Red Accent) */
+  .white-wall {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 0% 10%; /* Near Black for Primary */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 50%;
+    --accent: 355 90% 40%; /* Rosso Corsa Red for Accent */
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 80% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 0 0% 10%;
+
+    --sidebar: 0 0% 95%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 0 0% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 355 90% 40%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 85%;
+    --sidebar-ring: 0 0% 10%;
+  }
+
   /*
-  |--------------------------------------------------------------------------
-  | TAILWIND BASE LAYER
-  |--------------------------------------------------------------------------
-  */
+	|--------------------------------------------------------------------------
+	| TAILWIND BASE LAYER
+	|--------------------------------------------------------------------------
+	*/
   * {
     @apply border-border;
   }

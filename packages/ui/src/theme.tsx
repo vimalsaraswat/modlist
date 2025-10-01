@@ -30,6 +30,10 @@ const themes = [
   { name: "Garage 🛠️", value: "garage" },
   { name: "Rosso Corsa 🏎️", value: "rosso-corsa" },
   { name: "Chrome ✨", value: "chrome" },
+  // New ModList-inspired themes
+  { name: "Engine Bay ⚙️", value: "engine-bay" },
+  { name: "Asphalt 🛣️", value: "asphalt" },
+  { name: "White Wall ⚪", value: "white-wall" },
 ];
 
 const themeValues = themes
@@ -82,13 +86,12 @@ export function ThemeToggle() {
   const PrimaryIcon = isDark ? MoonIcon : SunIcon;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
           size="icon"
           className="gap-2 shadow-md sm:w-14"
-          onClick={() => setIsOpen(!isOpen)}
         >
           {/* Display current theme icon */}
           <PrimaryIcon className="size-5" />
@@ -108,7 +111,7 @@ export function ThemeToggle() {
       <DropdownMenuContent align="end">
         {themes.map((t, index) => (
           <React.Fragment key={t.value}>
-            {/* Separator before custom themes */}
+            {/* Separator before custom themes (index 3 is 'Midnight') */}
             {index === 3 && <hr className="my-1 border-border" />}
 
             <DropdownMenuItem
