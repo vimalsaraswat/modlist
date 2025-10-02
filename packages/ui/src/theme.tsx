@@ -24,16 +24,16 @@ const themes = [
   { name: "Light", value: "light" },
   { name: "Dark", value: "dark" },
   { name: "System", value: "system" },
-  { name: "Midnight 🌃", value: "midnight" },
-  { name: "Track Day 🏁", value: "track-day" },
-  { name: "Classic 🎩", value: "classic" },
-  { name: "Garage 🛠️", value: "garage" },
-  { name: "Rosso Corsa 🏎️", value: "rosso-corsa" },
-  { name: "Chrome ✨", value: "chrome" },
-  // New ModList-inspired themes
-  { name: "Engine Bay ⚙️", value: "engine-bay" },
-  { name: "Asphalt 🛣️", value: "asphalt" },
-  { name: "White Wall ⚪", value: "white-wall" },
+  // { name: "Midnight 🌃", value: "midnight" },
+  // { name: "Track Day 🏁", value: "track-day" },
+  // { name: "Classic 🎩", value: "classic" },
+  // { name: "Garage 🛠️", value: "garage" },
+  // { name: "Rosso Corsa 🏎️", value: "rosso-corsa" },
+  // { name: "Chrome ✨", value: "chrome" },
+  // // New ModList-inspired themes
+  // { name: "Engine Bay ⚙️", value: "engine-bay" },
+  // { name: "Asphalt 🛣️", value: "asphalt" },
+  // { name: "White Wall ⚪", value: "white-wall" },
 ];
 
 const themeValues = themes
