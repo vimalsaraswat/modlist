@@ -23,7 +23,11 @@ import {
 } from "@acme/ui/input-otp";
 import { Label } from "@acme/ui/label";
 import { Separator } from "@acme/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@acme/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  // TabsList, TabsTrigger
+} from "@acme/ui/tabs";
 import { toast } from "@acme/ui/toast";
 
 import { signIn } from "~/actions/auth";
@@ -432,11 +436,11 @@ export default function SignInDialog() {
         </div>
         <div className="space-y-4">
           <Tabs defaultValue="email" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            {/*<TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="email">Email</TabsTrigger>
               <TabsTrigger value="mobile">Mobile</TabsTrigger>
-            </TabsList>
-            <TabsContent value="email" className="mt-4">
+            </TabsList>*/}
+            <TabsContent value="email" className="mt--4">
               {renderEmailForms()}
             </TabsContent>
             <TabsContent value="mobile" className="mt-4">
