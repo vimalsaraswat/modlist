@@ -1,11 +1,12 @@
 import { index, pgTable } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
-import { category, make, model } from "./car";
+import { category, make, model, modification } from "./car";
 
 export const cities = pgTable("cities", (t) => ({
   id: t.serial("id").primaryKey(),
   name: t.text("name").notNull().unique(),
+  state: t.text("state").notNull(),
 }));
 
 export const listing = pgTable(
@@ -29,6 +30,10 @@ export const listing = pgTable(
       .integer()
       .notNull()
       .references(() => model.id),
+    modificationId: t
+      .integer()
+      // .nullable()
+      .references(() => modification.id, { onDelete: "set null" }),
     categoryId: t
       .integer()
       .notNull()

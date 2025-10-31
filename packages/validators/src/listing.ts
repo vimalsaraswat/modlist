@@ -9,6 +9,11 @@ export const addListingSchema = z.object({
   price: z.coerce.number().min(0, "Price must be non-negative"),
   makeId: z.number().int("Invalid make").positive("Invalid make"),
   modelId: z.number().int("Invalid model").positive("Invalid model"),
+  modificationId: z
+    .number()
+    .int("Invalid modification")
+    .positive("Invalid modification")
+    .optional(),
   categoryId: z.number().int("Invalid category").positive("Invalid category"),
   cityId: z.number().int("Invalid city").positive("Invalid city"),
   latitude: z.number().optional(),

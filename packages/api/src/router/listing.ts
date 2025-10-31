@@ -10,6 +10,7 @@ import {
   make,
   media,
   model,
+  modification,
   user,
 } from "@acme/db/schema";
 import { addListingSchema } from "@acme/validators";
@@ -38,6 +39,16 @@ export const listingRouter = {
         .where(eq(model.makeId, input.makeId))
         .execute(),
     ),
+  modificationsListByModel: publicProcedure
+    .input(z.object({ modelId: z.number() }))
+    .query(({ ctx, input }) =>
+      ctx.db
+        .select()
+        .from(modification)
+        .where(eq(modification.modelId, input.modelId))
+        .execute(),
+    ),
+
   list: publicProcedure
     .input(
       z.object({
@@ -45,6 +56,8 @@ export const listingRouter = {
         categoryId: z.number().optional(),
         makeId: z.number().optional(),
         modelId: z.number().optional(),
+        modificationId: z.number().optional(),
+        year: z.number().optional(),
         cityId: z.number().optional(),
         priceMin: z.number().optional(),
         priceMax: z.number().optional(),
@@ -58,6 +71,8 @@ export const listingRouter = {
         categoryId,
         makeId,
         modelId,
+        modificationId,
+        year,
         cityId,
         priceMin,
         priceMax,
@@ -81,6 +96,9 @@ export const listingRouter = {
       if (categoryId) filters.push(eq(listing.categoryId, categoryId));
       if (makeId) filters.push(eq(listing.makeId, makeId));
       if (modelId) filters.push(eq(listing.modelId, modelId));
+      if (modificationId)
+        filters.push(eq(listing.modificationId, modificationId));
+      if (year) filters.push(eq(listing.year, year));
       if (cityId) filters.push(eq(listing.cityId, cityId));
       if (priceMin !== undefined) filters.push(gte(listing.price, priceMin));
       if (priceMax !== undefined) filters.push(lte(listing.price, priceMax));
@@ -429,6 +447,7 @@ export const listingRouter = {
         price: input.price,
         makeId: input.makeId,
         modelId: input.modelId,
+        modificationId: input.modificationId ?? undefined,
         categoryId: input.categoryId,
         cityId: input.cityId,
         latitude: input.latitude ? String(input.latitude) : undefined,

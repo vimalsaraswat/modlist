@@ -17,17 +17,30 @@ export default async function ListingsPage({
     city?: string;
     query?: string;
     model?: string;
+    modification?: string;
     minPrice?: string;
     maxPrice?: string;
   }>;
 }) {
-  const { category, make, model, city, minPrice, maxPrice, query } =
-    await searchParams;
+  const {
+    category,
+    make,
+    model,
+    city,
+    minPrice,
+    maxPrice,
+    query,
+    modification,
+  } = await searchParams;
 
   const categoryId =
     category && !isNaN(Number(category)) ? Number(category) : undefined;
   const makeId = make && !isNaN(Number(make)) ? Number(make) : undefined;
   const modelId = model && !isNaN(Number(model)) ? Number(model) : undefined;
+  const modificationId =
+    modification && !isNaN(Number(modification))
+      ? Number(modification)
+      : undefined;
   const cityId = city && !isNaN(Number(city)) ? Number(city) : undefined;
 
   prefetch(
@@ -36,6 +49,7 @@ export default async function ListingsPage({
       categoryId,
       makeId,
       modelId,
+      modificationId,
       cityId,
       priceMin: minPrice ? Number(minPrice) : undefined,
       priceMax: maxPrice ? Number(maxPrice) : undefined,

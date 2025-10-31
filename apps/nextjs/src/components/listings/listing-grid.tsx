@@ -27,6 +27,7 @@ export function ListingGrid() {
       categoryId: parseNumericParam(searchParams.get("category")),
       makeId: parseNumericParam(searchParams.get("make")),
       modelId: parseNumericParam(searchParams.get("model")),
+      modificationId: parseNumericParam(searchParams.get("modification")),
       cityId: parseNumericParam(searchParams.get("city")),
       priceMin: parseNumericParam(searchParams.get("minPrice")),
       priceMax: parseNumericParam(searchParams.get("maxPrice")),

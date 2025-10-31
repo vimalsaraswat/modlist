@@ -12,7 +12,7 @@ import {
   Car,
   ImageIcon,
   IndianRupee,
-  MapPin,
+  // MapPin,
   Tag,
   Upload,
   X,
@@ -60,6 +60,8 @@ export default function AddListingForm() {
       price: 0,
       makeId: undefined,
       modelId: undefined,
+      modificationId: undefined,
+      year: undefined,
       categoryId: undefined,
       cityId: undefined,
       latitude: undefined,
@@ -116,6 +118,15 @@ export default function AddListingForm() {
       { enabled: !!makeId },
     ),
   );
+
+  const modelId = form.watch("modelId");
+  const { data: modifications = [], isLoading: isModificationsLoading } =
+    useQuery(
+      trpc.listing.modificationsListByModel.queryOptions(
+        { modelId: Number(modelId) },
+        { enabled: !!modelId },
+      ),
+    );
 
   const [images, setImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -451,6 +462,67 @@ export default function AddListingForm() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="modificationId"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-2">
+                    <FormLabel>Modification</FormLabel>
+                    <Combobox
+                      value={String(field.value ?? "")}
+                      onChange={(v) => field.onChange(Number(v))}
+                      options={modifications.map((m) => ({
+                        label: m.name,
+                        value: String(m.id),
+                      }))}
+                      placeholder={
+                        modelId
+                          ? isModificationsLoading
+                            ? "Loading..."
+                            : "Select modification"
+                          : "Select model first"
+                      }
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/*<FormField
+                control={form.control}
+                name="year"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-2">
+                    <FormLabel>Year</FormLabel>
+                     <Select
+                      onValueChange={(v) => field.onChange(Number(v))}
+                      value={String((field.value as number | undefined) ?? "")}
+                      disabled={!makeId || isModelsLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              modificationId
+                                ? "Select modification"
+                                : "Select make first"
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {models.map((m) => (
+                          <SelectItem key={m.id} value={String(m.id)}>
+                            {m.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />*/}
             </div>
           </CardContent>
         </Card>
@@ -496,12 +568,25 @@ export default function AddListingForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location *</FormLabel>
-                    <div className="relative">
-                      <MapPin
+                    <div className="relative w-full">
+                      {/*<MapPin
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                         size={16}
+                      />*/}
+                      <Combobox
+                        value={String(
+                          (field.value as number | undefined) ?? "",
+                        )}
+                        onChange={(v) => field.onChange(Number(v))}
+                        options={cities.map((m) => ({
+                          label: `${m.name} (${m.state})`.slice(0, 38),
+                          value: String(m.id),
+                        }))}
+                        placeholder={
+                          isCitiesLoading ? "Loading..." : "Select city"
+                        }
                       />
-                      <Select
+                      {/*<Select
                         onValueChange={(v) => field.onChange(Number(v))}
                         value={String(
                           (field.value as number | undefined) ?? "",
@@ -521,11 +606,11 @@ export default function AddListingForm() {
                         <SelectContent>
                           {cities.map((c) => (
                             <SelectItem key={c.id} value={String(c.id)}>
-                              {c.name}
+                              {`${c.name} (${c.state})`}
                             </SelectItem>
                           ))}
                         </SelectContent>
-                      </Select>
+                      </Select>*/}
                     </div>
                     <FormMessage />
                   </FormItem>

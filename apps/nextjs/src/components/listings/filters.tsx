@@ -5,8 +5,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   CarIcon,
+  CogIcon,
   FilterIcon,
-  IndianRupeeIcon,
+  // IndianRupeeIcon,
   MapIcon,
   TagIcon,
   X,
@@ -39,6 +40,7 @@ const defaultFilters = {
   category: "all",
   makeId: -1,
   modelId: -1,
+  modificationId: -1,
   city: -1,
   minPrice: "",
   maxPrice: "",
@@ -54,6 +56,7 @@ const Filters = () => {
     category: searchParams.get("category") ?? "all",
     makeId: Number(searchParams.get("make")) || -1,
     modelId: Number(searchParams.get("model")) || -1,
+    modificationId: Number(searchParams.get("modification")) || -1,
     city: Number(searchParams.get("city")) || -1,
     minPrice: searchParams.get("minPrice") ?? "",
     maxPrice: searchParams.get("maxPrice") ?? "",
@@ -64,6 +67,7 @@ const Filters = () => {
       category: searchParams.get("category") ?? "all",
       makeId: Number(searchParams.get("make")) || -1,
       modelId: Number(searchParams.get("model")) || -1,
+      modificationId: Number(searchParams.get("modification")) || -1,
       city: Number(searchParams.get("city")) || -1,
       minPrice: searchParams.get("minPrice") ?? "",
       maxPrice: searchParams.get("maxPrice") ?? "",
@@ -85,12 +89,19 @@ const Filters = () => {
       { enabled: !!filters.makeId && filters.makeId !== -1 },
     ),
   );
+  const { data: modifications = [] } = useQuery(
+    trpc.listing.modificationsListByModel.queryOptions(
+      { modelId: Number(filters.modelId) },
+      { enabled: !!filters.modelId && filters.modelId !== -1 },
+    ),
+  );
 
   const filtersChanged = useMemo(() => {
     return (
       filters.category !== currentFilters.category ||
       filters.makeId !== currentFilters.makeId ||
       filters.modelId !== currentFilters.modelId ||
+      filters.modificationId !== currentFilters.modificationId ||
       filters.city !== currentFilters.city ||
       filters.minPrice !== currentFilters.minPrice ||
       filters.maxPrice !== currentFilters.maxPrice
@@ -107,6 +118,7 @@ const Filters = () => {
       { key: "category", param: "category" },
       { key: "makeId", param: "make" },
       { key: "modelId", param: "model" },
+      { key: "modificationId", param: "modification" },
       { key: "city", param: "city" },
       { key: "minPrice", param: "minPrice" },
       { key: "maxPrice", param: "maxPrice" },
@@ -125,6 +137,11 @@ const Filters = () => {
     // special rule: if makeId is reset, clear model as well
     if (filters.makeId === -1) {
       params.delete("model");
+      params.delete("modification");
+    }
+
+    if (filters.modelId === -1) {
+      params.delete("modification");
     }
 
     const queryStr = params.toString();
@@ -145,6 +162,7 @@ const Filters = () => {
       filters.category !== "all" ||
       filters.makeId !== -1 ||
       filters.modelId !== -1 ||
+      filters.modificationId !== -1 ||
       filters.city !== -1 ||
       filters.minPrice !== "" ||
       filters.maxPrice !== ""
@@ -156,6 +174,7 @@ const Filters = () => {
       filters.category !== "all" ? filters.category : null,
       filters.makeId !== -1 ? filters.makeId : null,
       filters.modelId !== -1 ? filters.modelId : null,
+      filters.modificationId !== -1 ? filters.modificationId : null,
       filters.city !== -1 ? filters.city : null,
       filters.minPrice ? filters.minPrice : null,
       filters.maxPrice ? filters.maxPrice : null,
@@ -177,6 +196,7 @@ const Filters = () => {
   const categoryName = getNameById(filters.category, categories);
   const makeName = getNameById(filters.makeId, makes);
   const modelName = getNameById(filters.modelId, models);
+  const modificationName = getNameById(filters.modificationId, modifications);
   const cityName = getNameById(filters.city, cities);
 
   const clearFilter = useCallback(
@@ -193,6 +213,9 @@ const Filters = () => {
           break;
         case "modelId":
           params.delete("model");
+          break;
+        case "modificationId":
+          params.delete("modification");
           break;
         case "city":
           params.delete("city");
@@ -234,6 +257,11 @@ const Filters = () => {
       onClear: () => clearFilter("modelId", -1),
       color: "green",
     },
+    !!modificationName && {
+      label: modificationName,
+      onClear: () => clearFilter("modificationId", -1),
+      color: "green",
+    },
     !!cityName && {
       label: cityName,
       onClear: () => clearFilter("city", -1),
@@ -272,7 +300,9 @@ const Filters = () => {
         setFilters((f) => ({
           ...f,
           makeId: Number(v),
-          ...(filters.makeId === Number(v) ? {} : { modelId: -1 }),
+          ...(filters.makeId === Number(v)
+            ? {}
+            : { modelId: -1, modificationId: -1 }),
         })),
       options: [
         { label: "All Makes", value: "-1" },
@@ -285,10 +315,26 @@ const Filters = () => {
       type: "combobox" as const,
       value: String(filters.modelId),
       onChange: (v: string) =>
-        setFilters((f) => ({ ...f, modelId: Number(v) })),
+        setFilters((f) => ({
+          ...f,
+          modelId: Number(v),
+          ...(filters.modelId === Number(v) ? {} : { modificationId: -1 }),
+        })),
       options: [
         { label: "All Models", value: "-1" },
         ...models.map((m) => ({ label: m.name, value: String(m.id) })),
+      ],
+    },
+    {
+      icon: <CogIcon className="h-4 w-4 text-zinc-400" />,
+      label: "Modification",
+      type: "combobox" as const,
+      value: String(filters.modificationId),
+      onChange: (v: string) =>
+        setFilters((f) => ({ ...f, modificationId: Number(v) })),
+      options: [
+        { label: "All Modifications", value: "-1" },
+        ...modifications.map((m) => ({ label: m.name, value: String(m.id) })),
       ],
     },
     {
@@ -299,23 +345,26 @@ const Filters = () => {
       onChange: (v: string) => setFilters((f) => ({ ...f, city: Number(v) })),
       options: [
         { label: "All Cities", value: "-1" },
-        ...cities.map((c) => ({ label: c.name, value: String(c.id) })),
+        ...cities.map((c) => ({
+          label: `${c.name} (${c.state})`,
+          value: String(c.id),
+        })),
       ],
     },
-    {
-      icon: <IndianRupeeIcon className="h-4 w-4 text-zinc-400" />,
-      label: "Min Price",
-      type: "input" as const,
-      value: filters.minPrice,
-      onChange: (v: string) => setFilters((f) => ({ ...f, minPrice: v })),
-    },
-    {
-      icon: <IndianRupeeIcon className="h-4 w-4 text-zinc-400" />,
-      label: "Max Price",
-      type: "input" as const,
-      value: filters.maxPrice,
-      onChange: (v: string) => setFilters((f) => ({ ...f, maxPrice: v })),
-    },
+    // {
+    //   icon: <IndianRupeeIcon className="h-4 w-4 text-zinc-400" />,
+    //   label: "Min Price",
+    //   type: "input" as const,
+    //   value: filters.minPrice,
+    //   onChange: (v: string) => setFilters((f) => ({ ...f, minPrice: v })),
+    // },
+    // {
+    //   icon: <IndianRupeeIcon className="h-4 w-4 text-zinc-400" />,
+    //   label: "Max Price",
+    //   type: "input" as const,
+    //   value: filters.maxPrice,
+    //   onChange: (v: string) => setFilters((f) => ({ ...f, maxPrice: v })),
+    // },
   ];
 
   return (

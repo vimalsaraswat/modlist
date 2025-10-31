@@ -67,6 +67,35 @@ export const forumRouter = {
         .execute();
     }),
 
+  latestPosts: publicProcedure.query(({ ctx }) =>
+    ctx.db
+      .select({
+        id: forumPost.id,
+        title: forumPost.title,
+        content: forumPost.content,
+        viewCount: forumPost.viewCount,
+        author: {
+          name: user.name,
+          image: user.image,
+        },
+        createdAt: forumPost.createdAt,
+        replyCount: sql<number>`COUNT(${forumReply.id})`.as("replyCount"),
+      })
+      .from(forumPost)
+      .leftJoin(user, eq(user.id, forumPost.userId))
+      .leftJoin(forumReply, eq(forumReply.postId, forumPost.id))
+      .groupBy(
+        forumPost.id,
+        forumPost.title,
+        forumPost.content,
+        forumPost.createdAt,
+        user.name,
+        user.image,
+      )
+      .orderBy(desc(forumPost.updatedAt))
+      .limit(6),
+  ),
+
   trendingPosts: publicProcedure.query(({ ctx }) =>
     ctx.db
       .select({
