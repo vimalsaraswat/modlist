@@ -18,6 +18,7 @@ export default async function ListingsPage({
     query?: string;
     model?: string;
     modification?: string;
+    year?: string;
     minPrice?: string;
     maxPrice?: string;
   }>;
@@ -31,6 +32,7 @@ export default async function ListingsPage({
     maxPrice,
     query,
     modification,
+    year,
   } = await searchParams;
 
   const categoryId =
@@ -42,6 +44,7 @@ export default async function ListingsPage({
       ? Number(modification)
       : undefined;
   const cityId = city && !isNaN(Number(city)) ? Number(city) : undefined;
+  const yearNum = year && !isNaN(Number(year)) ? Number(year) : undefined;
 
   prefetch(
     trpc.listing.list.infiniteQueryOptions({
@@ -50,6 +53,7 @@ export default async function ListingsPage({
       makeId,
       modelId,
       modificationId,
+      year: yearNum,
       cityId,
       priceMin: minPrice ? Number(minPrice) : undefined,
       priceMax: maxPrice ? Number(maxPrice) : undefined,

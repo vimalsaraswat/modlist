@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   useMutation,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { z } from "zod/v4";
 
+import { parseYear, range } from "@acme/helpers";
 import { Button } from "@acme/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
 import {
@@ -112,6 +113,9 @@ export default function AddListingForm() {
   );
 
   const makeId = form.watch("makeId");
+  const modelId = form.watch("modelId");
+  const modificationId = form.watch("modificationId");
+
   const { data: models = [], isLoading: isModelsLoading } = useQuery(
     trpc.listing.modelListByMake.queryOptions(
       { makeId: Number(makeId) },
@@ -119,7 +123,6 @@ export default function AddListingForm() {
     ),
   );
 
-  const modelId = form.watch("modelId");
   const { data: modifications = [], isLoading: isModificationsLoading } =
     useQuery(
       trpc.listing.modificationsListByModel.queryOptions(
@@ -130,6 +133,23 @@ export default function AddListingForm() {
 
   const [images, setImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+  const mod = useMemo(
+    () => modifications.find((m) => m.id === modificationId),
+    [modifications, modificationId],
+  );
+
+  // 2. Compute the year range
+  const years = useMemo(() => {
+    if (!mod?.dateStart) return [];
+
+    const startYear = parseYear(mod.dateStart);
+    const endYear = mod.dateEnd
+      ? parseYear(mod.dateEnd)
+      : new Date().getFullYear();
+
+    return range(startYear, endYear);
+  }, [mod]);
 
   // Handlers
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -366,7 +386,7 @@ export default function AddListingForm() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="makeId"
@@ -375,7 +395,11 @@ export default function AddListingForm() {
                     <FormLabel>Make *</FormLabel>
                     <Combobox
                       value={String((field.value as number | undefined) ?? "")}
-                      onChange={(v) => field.onChange(Number(v))}
+                      onChange={(v) => {
+                        field.onChange(Number(v));
+                        form.resetField("modelId");
+                        form.resetField("modificationId");
+                      }}
                       options={makes.map((m) => ({
                         label: m.name,
                         value: String(m.id),
@@ -416,10 +440,13 @@ export default function AddListingForm() {
                 name="modelId"
                 render={({ field }) => (
                   <FormItem className="flex flex-col gap-2">
-                    <FormLabel>Model</FormLabel>
+                    <FormLabel>Model *</FormLabel>
                     <Combobox
                       value={String((field.value as number | undefined) ?? "")}
-                      onChange={(v) => field.onChange(Number(v))}
+                      onChange={(v) => {
+                        field.onChange(Number(v));
+                        form.resetField("modificationId");
+                      }}
                       options={models.map((m) => ({
                         label: m.name,
                         value: String(m.id),
@@ -432,7 +459,7 @@ export default function AddListingForm() {
                           : "Select make first"
                       }
                     />
-                    {/* <Select
+                    {/*<Select
                       onValueChange={(v) => field.onChange(Number(v))}
                       value={String((field.value as number | undefined) ?? "")}
                       disabled={!makeId || isModelsLoading}
@@ -457,7 +484,7 @@ export default function AddListingForm() {
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select> */}
+                    </Select>*/}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -489,40 +516,42 @@ export default function AddListingForm() {
                 )}
               />
 
-              {/*<FormField
-                control={form.control}
-                name="year"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col gap-2">
-                    <FormLabel>Year</FormLabel>
-                     <Select
-                      onValueChange={(v) => field.onChange(Number(v))}
-                      value={String((field.value as number | undefined) ?? "")}
-                      disabled={!makeId || isModelsLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={
-                              modificationId
-                                ? "Select modification"
-                                : "Select make first"
-                            }
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {models.map((m) => (
-                          <SelectItem key={m.id} value={String(m.id)}>
-                            {m.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />*/}
+              {years.length > 0 && (
+                <FormField
+                  control={form.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-2">
+                      <FormLabel>Year</FormLabel>
+                      <Select
+                        onValueChange={(v) => field.onChange(Number(v))}
+                        value={String(field.value ?? "")}
+                        disabled={!makeId || isModelsLoading}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={
+                                modificationId
+                                  ? "Select year"
+                                  : "Select modification first"
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {years.map((y) => (
+                            <SelectItem key={y} value={String(y)}>
+                              {y}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
           </CardContent>
         </Card>

@@ -32,7 +32,6 @@ export const listing = pgTable(
       .references(() => model.id),
     modificationId: t
       .integer()
-      // .nullable()
       .references(() => modification.id, { onDelete: "set null" }),
     categoryId: t
       .integer()

@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Calendar,
   CarIcon,
   CogIcon,
   FilterIcon,
@@ -13,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 
+import { parseYear, range } from "@acme/helpers";
 import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
@@ -41,6 +43,7 @@ const defaultFilters = {
   makeId: -1,
   modelId: -1,
   modificationId: -1,
+  year: -1,
   city: -1,
   minPrice: "",
   maxPrice: "",
@@ -57,6 +60,7 @@ const Filters = () => {
     makeId: Number(searchParams.get("make")) || -1,
     modelId: Number(searchParams.get("model")) || -1,
     modificationId: Number(searchParams.get("modification")) || -1,
+    year: Number(searchParams.get("year")) || -1,
     city: Number(searchParams.get("city")) || -1,
     minPrice: searchParams.get("minPrice") ?? "",
     maxPrice: searchParams.get("maxPrice") ?? "",
@@ -68,6 +72,7 @@ const Filters = () => {
       makeId: Number(searchParams.get("make")) || -1,
       modelId: Number(searchParams.get("model")) || -1,
       modificationId: Number(searchParams.get("modification")) || -1,
+      year: Number(searchParams.get("year")) || -1,
       city: Number(searchParams.get("city")) || -1,
       minPrice: searchParams.get("minPrice") ?? "",
       maxPrice: searchParams.get("maxPrice") ?? "",
@@ -96,12 +101,29 @@ const Filters = () => {
     ),
   );
 
+  const mod = useMemo(
+    () => modifications.find((m) => m.id === filters.modificationId),
+    [modifications, filters.modificationId],
+  );
+
+  const years = useMemo(() => {
+    if (!mod?.dateStart) return [];
+
+    const startYear = parseYear(mod.dateStart);
+    const endYear = mod.dateEnd
+      ? parseYear(mod.dateEnd)
+      : new Date().getFullYear();
+
+    return range(startYear, endYear);
+  }, [mod]);
+
   const filtersChanged = useMemo(() => {
     return (
       filters.category !== currentFilters.category ||
       filters.makeId !== currentFilters.makeId ||
       filters.modelId !== currentFilters.modelId ||
       filters.modificationId !== currentFilters.modificationId ||
+      filters.year !== currentFilters.year ||
       filters.city !== currentFilters.city ||
       filters.minPrice !== currentFilters.minPrice ||
       filters.maxPrice !== currentFilters.maxPrice
@@ -119,6 +141,7 @@ const Filters = () => {
       { key: "makeId", param: "make" },
       { key: "modelId", param: "model" },
       { key: "modificationId", param: "modification" },
+      { key: "year", param: "year" },
       { key: "city", param: "city" },
       { key: "minPrice", param: "minPrice" },
       { key: "maxPrice", param: "maxPrice" },
@@ -163,6 +186,7 @@ const Filters = () => {
       filters.makeId !== -1 ||
       filters.modelId !== -1 ||
       filters.modificationId !== -1 ||
+      filters.year !== -1 ||
       filters.city !== -1 ||
       filters.minPrice !== "" ||
       filters.maxPrice !== ""
@@ -175,6 +199,7 @@ const Filters = () => {
       filters.makeId !== -1 ? filters.makeId : null,
       filters.modelId !== -1 ? filters.modelId : null,
       filters.modificationId !== -1 ? filters.modificationId : null,
+      filters.year !== -1 ? filters.year : null,
       filters.city !== -1 ? filters.city : null,
       filters.minPrice ? filters.minPrice : null,
       filters.maxPrice ? filters.maxPrice : null,
@@ -198,6 +223,7 @@ const Filters = () => {
   const modelName = getNameById(filters.modelId, models);
   const modificationName = getNameById(filters.modificationId, modifications);
   const cityName = getNameById(filters.city, cities);
+  const year = filters.year !== -1 ? String(filters.year) : null;
 
   const clearFilter = useCallback(
     (key: keyof typeof filters, defaultValue: string | number = "") => {
@@ -216,6 +242,9 @@ const Filters = () => {
           break;
         case "modificationId":
           params.delete("modification");
+          break;
+        case "year":
+          params.delete("year");
           break;
         case "city":
           params.delete("city");
@@ -262,6 +291,11 @@ const Filters = () => {
       onClear: () => clearFilter("modificationId", -1),
       color: "green",
     },
+    !!year && {
+      label: String(year),
+      onClear: () => clearFilter("year", -1),
+      color: "green",
+    },
     !!cityName && {
       label: cityName,
       onClear: () => clearFilter("city", -1),
@@ -302,7 +336,7 @@ const Filters = () => {
           makeId: Number(v),
           ...(filters.makeId === Number(v)
             ? {}
-            : { modelId: -1, modificationId: -1 }),
+            : { modelId: -1, modificationId: -1, year: -1 }),
         })),
       options: [
         { label: "All Makes", value: "-1" },
@@ -318,7 +352,9 @@ const Filters = () => {
         setFilters((f) => ({
           ...f,
           modelId: Number(v),
-          ...(filters.modelId === Number(v) ? {} : { modificationId: -1 }),
+          ...(filters.modelId === Number(v)
+            ? {}
+            : { modificationId: -1, year: -1 }),
         })),
       options: [
         { label: "All Models", value: "-1" },
@@ -331,10 +367,25 @@ const Filters = () => {
       type: "combobox" as const,
       value: String(filters.modificationId),
       onChange: (v: string) =>
-        setFilters((f) => ({ ...f, modificationId: Number(v) })),
+        setFilters((f) => ({
+          ...f,
+          modificationId: Number(v),
+          ...(filters.modificationId === Number(v) ? {} : { year: -1 }),
+        })),
       options: [
         { label: "All Modifications", value: "-1" },
         ...modifications.map((m) => ({ label: m.name, value: String(m.id) })),
+      ],
+    },
+    {
+      icon: <Calendar className="h-4 w-4 text-zinc-400" />,
+      label: "Year",
+      type: "combobox" as const,
+      value: String(filters.year),
+      onChange: (v: string) => setFilters((f) => ({ ...f, year: Number(v) })),
+      options: [
+        { label: "All Years", value: "-1" },
+        ...years.map((y) => ({ label: String(y), value: String(y) })),
       ],
     },
     {
